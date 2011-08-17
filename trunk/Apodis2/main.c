@@ -61,7 +61,15 @@ main(int argc, char *argv[]){
   float dummy;
   float **Mdummy;
 
- int **rowptr;
+  int **rowptr;
+
+  float R[4];   //Este hay que pasarlo tambien a dinamico
+  float ModelParts[11][3];//Este hay que pasarlo tambien a dinamico
+
+  double (*infft)[2];   //Buffer for FFT 
+  double (*outfft)[2];
+
+  double resabs[32];
 
 
 
@@ -282,7 +290,7 @@ main(int argc, char *argv[]){
   //Siganl 8. Index=7 (8 - 1)
   //Make the new signal x[n]=x[n+1]-x[n], the last point is the previous point
 
-  for (j=conf_NModels-1;j>0;j--){
+  for (j=conf_NModels-1;j>0;j--){  //two parts loop for use the last loop M3 to generate the timeR
      // printf ("pM %d : ",(pSignal+i)->pM+j);
     pBuffer= *((pSignal+7)->pM+j);  //Used for easy code reading
     pBuffer1= *((pSignal+2)->pM+j);
@@ -291,8 +299,8 @@ main(int argc, char *argv[]){
     }
     *(pBuffer+i)= *(pBuffer+i-1);
   }
-   
-  for (j=0;j>=0;j--){
+  
+  for (j=0;j>=0;j--){                           //genarate M3 timeR and data
      // printf ("pM %d : ",(pSignal+i)->pM+j);
     pBuffer= *((pSignal+7)->pM+j);  //Used for easy code reading
     pBuffer1= *((pSignal+2)->pM+j);
@@ -306,6 +314,33 @@ main(int argc, char *argv[]){
   }
         
   //Signal 8. Done
+
+  //Signal 9. difference between signals 6 and 7. The signal is number 8 (9-1)
+
+  for (j=conf_NModels-1;j>0;j--){  //two parts loop for use the last loop M3 to generate the timeR
+     // printf ("pM %d : ",(pSignal+i)->pM+j);
+    pBuffer= *((pSignal+8)->pM+j);  //Used for easy code reading
+    pBuffer1= *((pSignal+5)->pM+j);
+    pBuffer2= *((pSignal+6)->pM+j);
+    for (i=0;i<conf_Npoints;i++){
+      *(pBuffer+i)= normalize ((pSignal+8)->Max, (pSignal+8)->Min, (*(pBuffer1+i) < 1000 ? 1000 :*(pBuffer1+i)) / *(pBuffer2+i)); //Ojo 1000 a configuracion
+    }
+  }
+
+  
+  for (j=0;j>=0;j--){                           //genarate M3 timeR and data
+     // printf ("pM %d : ",(pSignal+i)->pM+j);
+    pBuffer= *((pSignal+8)->pM+j);  //Used for easy code reading
+    pBuffer1= *((pSignal+5)->pM+j);
+    pBuffer2= *((pSignal+6)->pM+j);
+   
+    for (i=0;i<conf_Npoints;i++){
+      *(pBuffer+i)= normalize ((pSignal+8)->Max, (pSignal+8)->Min, (*(pBuffer1+i) < 1000 ? 1000 :*(pBuffer1+i)) / *(pBuffer2+i)); //Ojo 1000 a configuracion
+      *((pSignal+8)->pTimeR+i)= *((pSignal+5)->pTimeR+i);
+    }
+  }
+
+
 
   // PRINTSIGNAL (pSignal);
   //  PRINTSIGNAL (pSignal+7);
@@ -363,9 +398,28 @@ main(int argc, char *argv[]){
      M_values (*(PathMx+i), pModel+i);
    }
 
-
+   Read_M (conf_PathR, R);
 
    //here the model is read
+
+   //calculamos los valores del medelo de las tres ventanas
+   //esto hay que meterlo dentro de la estructira de punteros
+
+
+   for (i=0;i<conf_NModels;i++){ //mean ipla 
+     ModelParts[0][i]= Mean (*((pSignal)->pM+i), conf_Npoints);
+   }
+
+   for (i=0;i<conf_NModels;i++){ //des ipla 
+     
+
+     fft(conf_Npoints, infft, outfft);  
+ 
+     Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
+ 
+     ModelParts[0][i]= Desv (resabs, conf_Npoints/2);
+
+   }
 
 
   //    N_vectors("p.txt" , &dmmy, &dmmy1);

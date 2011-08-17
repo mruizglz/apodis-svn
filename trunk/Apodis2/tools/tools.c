@@ -13,6 +13,7 @@ Tools set to Resamplig and Normalize discharge signals
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 #include "../tipos.h"
 #include "tools.h"
 
@@ -220,19 +221,21 @@ int ReadFloatTxt(char *path, float *buffer){
 
 
 
-double Mean (double *pData, int npoints){ //Ojo se puede ir el puntero y podria retornar infinito
+float Mean (float *pData, int npoints){ //Ojo se puede ir el puntero y podria retornar infinito
 
 
-  double result;
+  float result;
+
   int i;
 
   result=0;
+
 
   for (i=0; i< npoints; i++){
     result+= *(pData+i);
   }
 
-  result= (double) result/npoints;
+  result= (float) result/npoints;
 
 
 }
@@ -411,3 +414,74 @@ void  M_values (char * path, model *Model){
 
 	
 }
+
+void  Read_M (char * path, float *M){
+
+
+	FILE *file;
+
+	char buf[1025], *b;
+	int line = 0;
+	int t=0;
+	int i;
+	int len;
+	char *endptr;
+	float dummy;
+
+	file = fopen(path, "r");
+
+	if (!file){
+	  printf ("File for Model coeficientes Not Found %s \n", path);
+	  exit(EXIT_FAILURE);
+	} 
+
+	fgets(buf, 1024, file);
+	b=buf;
+	endptr= NULL;
+	*(M+3)= (float)strtod(b,&endptr);
+	*(M+2)= (float)strtod(endptr,&endptr);
+	*(M+1)= (float)strtod(endptr,&endptr);
+	*M= (float)strtod(endptr,&endptr);
+
+
+	
+}
+
+void Absolute ( double (*x)[2], double *result, int npoints){
+
+ 
+  int i;
+
+
+  for (i=0;i<npoints;i++){
+    *(result+i)= sqrt ( pow (*x[0],2) + pow (*x[1],2));
+  }
+
+ 
+}
+
+
+
+double Desv (double *pData, int npoints){ //Ojo se puede ir el puntero y podria retornar infinito
+
+
+  double  result;
+  double  dc;
+
+  int i;
+
+  result=0;
+
+  for (i=1; i< npoints; i++){ //remove the firt element
+    dc+= *(pData+i);
+  }
+  dc= (double) result/npoints;
+  result=0;
+  for (i=0; i< npoints; i++){
+    result +=  pow ((*(pData+i) - dc),2) ;
+  }
+  dc = (double) result / npoints;
+  result= sqrt(dc);
+
+}
+
