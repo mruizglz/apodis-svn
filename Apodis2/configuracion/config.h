@@ -22,6 +22,8 @@ extern char     *conf_PathD3;
 
 extern char     *conf_PathR;
 
+extern char     *conf_PathNormalize;
+
 
 /*
 extern int   conf_TOutRs485UCms;

@@ -85,6 +85,7 @@ float IntLin (float xi, float yi, float xf, float yf, float in){
 
 float normalize (float Max, float Min, float data){
 
+  // printf("Normalizacion Max: %f Min: %f ",Max,Min);
 
   return(float) (data-Min)/(Max-Min);
 
@@ -106,8 +107,8 @@ float normalize (float Max, float Min, float data){
 //*************************************************
 
 
-int  resampling (int index, double resampling, float t0, float *pDataR, signal *wave, int Normalize){
-
+//int  resampling (int index, double resampling, float t0, float *pDataR, signal *wave, int Normalize){
+int  resampling (int index, double resampling, float *pDataR, signal *wave){
 
   int n; // iterations value
   int i; 
@@ -117,11 +118,17 @@ int  resampling (int index, double resampling, float t0, float *pDataR, signal *
   float paddingvalue; //padding Value, last sample
   float intermediate; //Intermediate Buffer for easy code rading
 
+  float t0; //To reuse codefrom previous version
+  int Normalize; // To reuse code from previous version
+
   sampling = *(wave->pTime+1)-*(wave->pTime);
 
   n= wave->Npoints*resampling / sampling; // number of iterations to resampling
 
   rindex=0;
+
+  t0= *(wave->pTime+index);
+  Normalize= (wave->Normalize);
  
   if (n < wave->Npoints){  //
     for (i=0; i< n; i++){
@@ -129,8 +136,11 @@ int  resampling (int index, double resampling, float t0, float *pDataR, signal *
 	time= t0+((float)rindex*resampling);
 	*(wave->pTimeR+rindex)=time;
 	intermediate = IntLin (*(wave->pTime+index+i), *(wave->pData+index+i), *(wave->pTime+index+i+1),  *(wave->pData+index+i+1),time);
-	if (Normalize)
+	if (Normalize){
 	  *(pDataR+rindex)= normalize (wave->Max, wave->Min, intermediate);
+	  //	printf(" Res: %f \n",*(pDataR+rindex));
+	}
+
 	else
 	  *(pDataR+rindex)= intermediate;
         rindex++;
@@ -224,5 +234,43 @@ double Mean (double *pData, int npoints){ //Ojo se puede ir el puntero y podria 
 
   result= (double) result/npoints;
 
+
+}
+
+/**********************************************
+// This fuction read the Normalize txt file 
+// and fill the input array with the normalization Flag
+// path: Pointer to Path name
+// buffer: pointer to result's array
+// return the number of lines read
+**********************************************/
+
+
+
+int ReadNormalizeTxt(char *path, int *buffer){
+
+	FILE *file;
+
+
+	char buf[1025], *b, *c;
+	int line = 0;
+	char *endptr;
+
+	endptr= NULL;
+
+
+	file = fopen(path, "r");
+	if (!file){
+	  printf ("File for Normalize Not Found \n");
+	  exit(EXIT_FAILURE);
+	} 
+	while (fgets(buf, 1024, file) != NULL) 
+	{
+		b=buf;
+		*(buffer+line)= strtol(b, &endptr, 0); /* Automatic base 10/16/8 switching */
+		++line;
+	
+	}
+	return (line);
 
 }

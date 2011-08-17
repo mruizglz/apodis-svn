@@ -43,6 +43,7 @@ char     *conf_PathD3  =  "./trainingXX/D3Coefficients.txt";
 
 char     *conf_PathR   =  "./trainingXX/RCoefficients.txt";
 
+char     *conf_PathNormalize   =  "./trainingXX/Normalize.txt";
 
 
 /*

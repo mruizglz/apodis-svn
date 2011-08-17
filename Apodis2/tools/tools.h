@@ -12,8 +12,8 @@ typedef  struct {
     float *pData;        //Pointer to raw data
     float *pTime;        //pointer to time for raw data signal
     float *pTimeR;       //pointer to resampling times for nearest time window
-    float *pM;           //pointer to array of pointer of model windows
-   
+    float **pM;         //pointer to array of pointer of model windows
+    int Normalize;        //the signal has to be Normalize
 
   } signal;
 
@@ -22,10 +22,12 @@ typedef  struct {
 
 int IndexEvent( float *pBufferin, int n_samples, float Threshold, int type);
 float IntLin (float xi, float yi, float xf, float yf, float in);
-int  resampling (int index, double resampling, float t0, float *pDataR, signal *wave, int Normalize);
+//int  resampling (int index, double resampling, float t0, float *pDataR, signal *wave, int Normalize);
+int  resampling (int index, double resampling, float *pDataR, signal *wave);
 float normalize (float Max, float Min, float data);
 int  ReadFloatTxt(char *path, float *buffer);
 double Mean (double *pData, int npoints);
+int ReadNormalizeTxt(char *path, int *buffer);
 
 
 

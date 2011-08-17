@@ -1,4 +1,4 @@
-/*
+ /*
 
 Program implemented by Juan Manuel Lopez, Universidad Politecnica de Madrid
 july-Augoust 2011
@@ -19,6 +19,7 @@ JET signal reading method provide by Jesus Vega (CIEMAT)
 #include "./tools/tools.h"
 #include "./configuracion/config.h"
 
+void PRINTSIGNAL( signal *entrada);
 
 
 main(int argc, char *argv[]){
@@ -42,9 +43,19 @@ main(int argc, char *argv[]){
   float *Minimums;
 
 
-  int i,j;  // for loops
+  int i,j,t;  // for loops
   int error;  //Error indicator
   int ndata; //Number of datos of a signal
+
+  float **pArray; //pointer to array
+  float *pBuffer; //Pointer too buffer
+  float *pBuffer1; //Pointer too buffer
+  float *pBuffer2; //Pointer too buffer
+
+  int  *ToNormalize; // pointer to array with actions about normalize proccess
+                     //[12]={TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE};
+  float dummy;
+
 
 
   /* Test of input parameters */
@@ -77,6 +88,7 @@ main(int argc, char *argv[]){
   printf ("path d2 %s \n",conf_PathD2);
   printf ("path d3 %s \n",conf_PathD3);
   printf ("path r %s \n",conf_PathR);
+  printf ("path Normalize  %s \n",conf_PathNormalize);
 
   Nsignals= conf_Nsignals + conf_NcalculateSignals; // Total number of signal to handle
 
@@ -151,7 +163,7 @@ main(int argc, char *argv[]){
        units [sizeof(units) - 1] = 0;
        getdat_((pSignal+i)->name, &shotNumber, (pSignal+i)->pData, (pSignal+i)->pTime,&ndata , title, units, &error,(long) strlen((pSignal+i)->name), sizeof(title) - 1l, sizeof(units) - 1l);
        (pSignal+i)->nSamples= ndata;
-
+       (pSignal+i)->Npoints= conf_Npoints;
 
     }
     else{
@@ -170,29 +182,33 @@ main(int argc, char *argv[]){
 
   //At this point the signal have been read form the JET BBDD
 
-  for (i=1000;i<1016;i++){
-    printf ("Signal t: %f valor %f \n",*((pSignal+1)->pTime+i),*((pSignal+1)->pData+i));
+  for (i=1143;i<1155;i++){
+    printf ("Signal t: %f valor %f \n",*((pSignal+0)->pTime+i),*((pSignal+0)->pData+i));
 
   }
 
   Maximums= (float *) malloc(sizeof(float)*Nsignals); //Alocate space for Maximums and Minimums
   Minimums= (float *) malloc(sizeof(float)*Nsignals); //Alocate space for Maximums and Minimums
+  ToNormalize= (int *) malloc(sizeof(int)*Nsignals); //Alocate space for normaliza Flag
 
   // Reading Maximums and Minimums values
 
-  if((ReadFloatTxt(conf_PathMax, Maximums) != Nsignals) or (ReadFloatTxt(conf_PathMin, Minimums) !=  Nsignals)){
-    printf ("Maximum or Minimus Files does not match with signal numbers \n");
+  if((ReadFloatTxt(conf_PathMax, Maximums) != Nsignals) or (ReadFloatTxt(conf_PathMin, Minimums) !=  Nsignals or (ReadNormalizeTxt(conf_PathNormalize, ToNormalize) != Nsignals))){
+    printf ("Maximum, Minimus, or Normalize  Files does not match with signal numbers \n");
     exit (0);
   }
     
  for(i=0;i<Nsignals;i++){
    (pSignal+i)->Max= *(Maximums+i);
    (pSignal+i)->Min= *(Minimums+i);
-    printf("Leido del struct %f \n",(pSignal+i)->Max);
+   (pSignal+i)->Normalize= *(ToNormalize+i);   
+   printf("Leido del struct %d \n",(pSignal+i)->Normalize);
   }
 
  free(Maximums); //free array values are copied in the struct
  free(Minimums);
+ free(ToNormalize);
+
 
   
   //Look for t0 for the signals, the reference is Ipla signal 0
@@ -202,40 +218,102 @@ main(int argc, char *argv[]){
 
   *t0= IndexEvent((pSignal)->pData,(pSignal)->nSamples,conf_Threshold,0); //Look for the time when Ipla < Threshold 
 
+  printf("Indice de t0 %d \n",*t0);
+
   // t0 for all signals, Only for raw signals
 
   for (i=1;i < conf_Nsignals;i++){
     *(t0+i)=  IndexEvent( (pSignal+i)->pTime,(pSignal+i)->nSamples,*((pSignal)->pTime+(*t0)),1);
   }
-
+  
   //make pointer array and allocate memory for memory windows in models
 
-  for (i=0;i<Nsignals;i++){ //Allocate array's pointer
-     (pSignal+i)->pM= (float *) malloc(sizeof(float)*conf_NModels); //Allocate space for arrays pointers  
+  for (i=0;i<Nsignals;i++){ //Allocate array's pointer and pointer to resamplig time
+    (pSignal+i)->pM=  malloc(sizeof(float)*conf_NModels); //Allocate space for arrays pointers  
   }
-
+ 
   for (i=0;i<Nsignals;i++){ //Allocate memory buffers
-     (pSignal+i)->pM= (float *) malloc(sizeof(float)*conf_NModels); //Allocate space 
-     for(j=0;j<conf_NModels;j++){
-       Maximums= (float *) malloc(conf_Npoints*sizeof(float)); //Allocate memory 
-       
-       *(((pSignal+i)->pM)+j)= &Maximums;
+    (pSignal+i)->pTimeR= malloc(sizeof(float)*conf_Npoints); //Buffer for resampling time
+    for(j=0;j<conf_NModels;j++){
+      *((pSignal+i)->pM+j)= (float *) malloc(conf_Npoints*sizeof(float));
+      if(*((pSignal+i)->pM+j) == NULL ){ //Do so for easy code ready
+	free(pSignal);
+        printf("\n**** Not available memory for Model windows  %s, \n",(pSignal+i)->name );
+        exit(0);
+      }
+    }
+  }
+ 
+  //Here the raw signal are read, and all buffers are allocated for all signal
+  //Now the buffer are going to be filled with resampling data window.
 
-       
-       //      if( ((pSignal+i)->(pM+j) = (float *) malloc(conf_Npoints*sizeof(float))) == (float *) 0 ){ //Allocate memory
-       //       free(pSignal);
-       //      printf("\n**** Not available memory for Model windows  %s, \n",(pSignal+i)->name);
-       //	      exit(0);
-       //}
+  
+  for (i=0;i<conf_Nsignals;i++){ //Resampling for rae signals only 
+    //     printf ("struct status signal %s : \n",(pSignal+i)->name);
+    // printf ("maximum: %f minimum: %f Npuntos: %d nsamples: %d \n",(pSignal+i)->Max,(pSignal+i)->Min,(pSignal+i)->Npoints,(pSignal+i)->nSamples);
+     // printf ("pData: %d pTime: %d pTimeR: %d \n",(pSignal+i)->pData,(pSignal+i)->pTime,(pSignal+i)->pTimeR);
+     for (j=conf_NModels-1;j>=0;j--){
+       // printf ("pM %d : ",(pSignal+i)->pM+j);
+        t=resampling ( *(t0+i), conf_Sampling,*((pSignal+i)->pM+j) ,(pSignal+i));
+       *(t0+i)+=t;
+
      }
+     //   printf("\n");
+
+
   }
 
 
-  pSignal->Max= 45;
-  (pSignal+1)->Max= 69;
+  //Here the raw signal are reading and ready to be used
+ 
+  //Now start the caculate signals. Signal number 8 (from number 3) the difference signal
+  //Signal 9 (from 6 and 7). Signal 6 is adjust to a minimum value of 1000 and then is divided 
+  //for signal 7.
 
+  //Siganl 8. Index=7 (8 - 1)
+  //Make the new signal x[n]=x[n+1]-x[n], the last point is the previous point
 
+  for (j=conf_NModels-1;j>0;j--){
+     // printf ("pM %d : ",(pSignal+i)->pM+j);
+    pBuffer= *((pSignal+7)->pM+j);  //Used for easy code reading
+    pBuffer1= *((pSignal+2)->pM+j);
+    for (i=0;i<conf_Npoints-1;i++){
+      *(pBuffer+i)= normalize ((pSignal+7)->Max, (pSignal+7)->Min, *(pBuffer1+i+1)-*(pBuffer1+i));
+    }
+    *(pBuffer+i)= *(pBuffer+i-1);
+  }
+   
+  for (j=0;j>=0;j--){
+     // printf ("pM %d : ",(pSignal+i)->pM+j);
+    pBuffer= *((pSignal+7)->pM+j);  //Used for easy code reading
+    pBuffer1= *((pSignal+2)->pM+j);
+   
+    for (i=0;i<conf_Npoints-1;i++){
+      *(pBuffer+i)= normalize ((pSignal+7)->Max, (pSignal+7)->Min, *(pBuffer1+i+1)-*(pBuffer1+i));
+      *((pSignal+7)->pTimeR+i)= *((pSignal+2)->pTimeR+i);
+    }
+    *(pBuffer+i)= *(pBuffer+i-1);
+    *((pSignal+7)->pTimeR+i)= *((pSignal+7)->pTimeR+i-1);
+  }
+        
+  //Signal 8. Done
 
+  PRINTSIGNAL (pSignal);
+  //  PRINTSIGNAL (pSignal+7);
 
 }
 
+
+
+
+
+void PRINTSIGNAL( signal *entrada){
+  int i;
+
+  printf ("Valores comunes Max: %f  Min: %f Pts: %d \n",entrada->Max, entrada->Min, entrada->Npoints);
+  printf ("ind \t Tiempo \t\t valor M3 \t valor M2 \t valor M1 \n");
+  for (i=0;i<entrada->Npoints;i++){
+    printf ("%d \t tr: %f  \t  %f  \t  %f \t  %f \n", i, *(entrada->pTimeR+i),*(entrada->pM+2+i),*(entrada->pM+1+i),*(entrada->pM+i));
+  }
+
+}
