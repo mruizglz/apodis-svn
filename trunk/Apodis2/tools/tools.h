@@ -17,6 +17,14 @@ typedef  struct {
 
   } signal;
 
+typedef struct {
+  double gamma;
+  double bias;
+  int coef_vector;
+  int nvectors;
+  float **data;
+  float *alfa;
+} model;
 
 
 
@@ -28,7 +36,9 @@ float normalize (float Max, float Min, float data);
 int  ReadFloatTxt(char *path, float *buffer);
 double Mean (double *pData, int npoints);
 int ReadNormalizeTxt(char *path, int *buffer);
-
+int ReadModelTxt(char *path, char **buffer);
+void  N_vectors(char * path, int *nvectors, int *ncoefficients);
+void  M_values (char * path, model *Model);
 
 
 

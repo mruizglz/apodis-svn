@@ -16,9 +16,7 @@ extern int      conf_NModels;
 extern char     *conf_PathMax;
 extern char     *conf_PathMin;
 
-extern char     *conf_PathD1;
-extern char     *conf_PathD2;
-extern char     *conf_PathD3;
+extern char     *conf_PathModel;
 
 extern char     *conf_PathR;
 

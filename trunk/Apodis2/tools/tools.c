@@ -274,3 +274,140 @@ int ReadNormalizeTxt(char *path, int *buffer){
 	return (line);
 
 }
+
+
+/**********************************************
+// This fuction read the Descripcion Model txt file 
+// The file has the path to Model vector Files
+// path: Pointer to Path name
+// buffer: pointer to result's array
+// return the number of lines read
+**********************************************/
+
+
+
+int ReadModelTxt(char *path, char **buffer){
+
+	FILE *file;
+
+
+	char buf[1025];
+	int line = 0;
+
+	file = fopen(path, "r");
+	if (!file){
+	  printf ("File for Model description Not Found \n");
+	  exit(EXIT_FAILURE);
+	} 
+	while (fgets(buf, 1024, file) != NULL) 
+	{
+	
+	   strcpy(*(buffer+line), buf); 
+	   ++line;
+	
+	}
+	return (line);
+
+}
+
+/***********************************************************
+// This fuction return de number of coefficients in a vector
+// and the number of vectors
+************************************************************/
+
+
+void  N_vectors(char * path, int *nvectors, int *ncoefficients){
+
+
+	FILE *file;
+
+
+	char buf[1025];
+	int line = 0;
+	int t=0;
+	int i;
+	int len;
+	char *p;
+
+	p= path;
+	i=0;
+	while (*(p+i++)!= '\n');
+	*(p+i-1)= '\0';
+	
+	file = fopen(path, "r");
+	if (!file){
+	  printf ("File for coeficientes Not Found %s \n", path);
+	  exit(EXIT_FAILURE);
+	} 
+	while (fgets(buf, 1024, file) != NULL) 
+	{
+	  if(line == 1){
+	    len=strlen(buf);
+	    for (i=1;i<len;i++)
+	      if(isspace(buf[i]) && !isspace(buf[i-1]) && (buf[i] != '\n'))
+		t++;
+	    }
+	  //else do nothing
+	   if (buf[0] != '\n')
+	     ++line;
+	}
+
+	*nvectors= line-1;
+	*ncoefficients= t;
+
+	
+}
+
+
+void  M_values (char * path, model *Model){
+
+
+	FILE *file;
+
+	char buf[1025], *b;
+	int line = 0;
+	int t=0;
+	int i;
+	int len;
+	char *endptr;
+	float dummy;
+
+	file = fopen(path, "r");
+
+	if (!file){
+	  printf ("File for Model coeficientes Not Found %s \n", path);
+	  exit(EXIT_FAILURE);
+	} 
+
+	fgets(buf, 1024, file);
+	b=buf;
+	endptr= NULL;
+	Model->gamma= (float)strtod(b,&endptr);
+	Model->bias= (float)strtod(endptr,&endptr);
+	printf("Gamma: %f   bias: %f \n",Model->gamma,Model->bias);
+	
+	for (i=0;i<Model->nvectors;i++){
+	  fgets(buf, 1024, file);
+ 
+	  b=buf;
+	  endptr= NULL;
+	  t=0;
+	  Model->data[i][t]= (float)strtod(b,&endptr);
+	  for (t=0;t<Model->coef_vector;t++){
+	     dummy= (float)strtod(endptr,&endptr);
+
+	     if(t==Model->coef_vector-1){
+	       *(Model->alfa+i)= dummy;
+	       printf("valor: %f \n",dummy);
+	     }
+	     else
+	       Model->data[i][t]= dummy;
+	  }
+
+	  line++;
+ 
+  
+	}
+
+	
+}
