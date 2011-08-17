@@ -240,6 +240,7 @@ float Mean (float *pData, int npoints){ //Ojo se puede ir el puntero y podria re
 
   result= (float) result/npoints;
 
+  return (result);
 
 }
 
@@ -399,15 +400,16 @@ void  M_values (char * path, model *Model){
 	  endptr= NULL;
 	  t=0;
 	  Model->data[i][t]= (float)strtod(b,&endptr);
-	  for (t=0;t<Model->coef_vector;t++){
+	  for (t=1;t<Model->coef_vector+1;t++){
 	     dummy= (float)strtod(endptr,&endptr);
 
-	     if(t==Model->coef_vector-1){
+	     if(t==Model->coef_vector){
 	       *(Model->alfa+i)= dummy;
-	       printf("valor: %f \n",dummy);
+	       //printf("valor: %f \n",dummy);
 	     }
 	     else
 	       Model->data[i][t]= dummy;
+	     printf("valor: %f \n",dummy);
 	  }
 
 	  line++;
@@ -450,15 +452,16 @@ void  Read_M (char * path, float *M){
 	
 }
 
+//void Absolute ( double *rea, double *imj, double *result, int npoints){
 void Absolute ( double (*x)[2], double *result, int npoints){
-
  
   int i;
+  double p1,p2,p3;
 
 
   for (i=0;i<npoints;i++){
-    *(result+i)= sqrt ( pow (*x[0],2) + pow (*x[1],2));
-  }
+    *(result+i)= sqrt ( pow (x[i][0],2) + pow (x[i][1],2));
+   }
 
  
 }
@@ -477,52 +480,108 @@ double Desv (double *pData, int npoints){ //Ojo se puede ir el puntero y podria 
 
   for (i=1; i< npoints; i++){ //remove the firt element
     dc+= *(pData+i);
-  }
-  dc= (double) result/npoints;
+   }
+  dc= (double) dc/(npoints-1);
   result=0;
-  for (i=0; i< npoints; i++){
+  for (i=1; i< npoints; i++){
     result +=  pow ((*(pData+i) - dc),2) ;
   }
-  dc = (double) result / npoints;
+  dc = (double) result / (npoints-2);
   result= sqrt(dc);
+
+  return(result);
+
 
 }
 
 
-void distance (float (*input)[3], model *Model, int nModels, float *D){
+double distance (float *input, model *Model){
  
    int i,j,t;
    float *ind_vector;
    float *ind_X;
    float dummy;
    float norm=0;
-   float e=0;
+   double e=0;
    float sum=0; 
 
 	
 
 
-   for (j=0;j < nModels;j++){
-
-   	ind_vector= *(Model->data+j);   
-   	ind_X= *(input+j);   
+   ind_vector= *(Model->data);   
+   ind_X= input;   
 
 	sum=0;
+
 	for (i=0;i < Model->nvectors; i++){
                 norm=0;
 		for (t=0;t < Model->coef_vector;t++){
 		   dummy= *(ind_vector+t)-*(ind_X+t);
+		   printf("Distancia %.10f in: %.10f  Vector X: %.10f \n",dummy,*(ind_vector+t),*(ind_X+t));
 		   dummy= pow(dummy,2);
 		   norm=norm+dummy;
 		}
-		norm=norm*-1.00;
+		norm=norm*-1.00*Model->gamma;
 		e=exp(norm);
 		sum=sum+ *(Model->alfa+i)*e;	
 	}
-	*(D+j)= sum-Model->bias;   
+	return (sum-Model->bias);   
 
-   }
+}
 
+
+int bufferFree (int *indice, int nModelos){
+
+  if(*indice != 0){
+	*(indice)--;
+     }
+     else{
+       *(indice)= nModelos-1;
+     }
+     
+     return (*indice);
+
+}
+
+void salvaOutput( float *input, char *path){
+
+	FILE *file;
+
+	char buf[1025], *b;
+	int line = 0;
+	int t=0;
+	int i;
+	int len;
+	char *endptr;
+	float dummy;
+
+	float *ind_X;
+
+
+
+	file = fopen(path, "w");
+
+	if (!file){
+	  printf ("File for Output Not Found %s \n", path);
+	  exit(EXIT_FAILURE);
+	} 
+
+	  //	  ind_X= *(input+i);  
+	  for (t=0;t<32;t++){
+	    fprintf(file,"%.10f \t\n",*(input+t));
+          }
+	   
+
+	fclose(file);
+
+
+  
+}
+
+int iwindow_1 (int *indice, int nModelos){
+
+
+  return((*indice - 1) < 0 ? nModelos : *indice -1);
 
 
 }

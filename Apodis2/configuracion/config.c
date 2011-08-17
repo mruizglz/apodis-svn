@@ -30,8 +30,8 @@ double   conf_Threshold = -1100000;
 double   conf_Sampling = 0.001;
 
 int      conf_Npoints = 32;
-int      conf_Nsignals= 6;
-int      conf_NcalculateSignals = 3;
+int      conf_Nsignals= 7;
+int      conf_NcalculateSignals = 2;
 int      conf_NModels = 3;
 
 char     *conf_PathMax = "./trainingXX/MaxCoefficients.txt";
