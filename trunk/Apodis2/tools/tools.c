@@ -14,6 +14,7 @@ Tools set to Resamplig and Normalize discharge signals
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+#include <iso646.h>
 #include "../tipos.h"
 #include "tools.h"
 
@@ -109,7 +110,7 @@ float normalize (float Max, float Min, float data){
 
 
 //int  resampling (int index, double resampling, float t0, float *pDataR, signal *wave, int Normalize){
-int  resampling (int index, double resampling, float *pDataR, signal *wave){
+int  resampling (int index, double resampling, double t0, float *pDataR, signal *wave){
 
   int n; // iterations value
   int i; 
@@ -119,7 +120,7 @@ int  resampling (int index, double resampling, float *pDataR, signal *wave){
   float paddingvalue; //padding Value, last sample
   float intermediate; //Intermediate Buffer for easy code rading
 
-  float t0; //To reuse codefrom previous version
+  //  float t0; //To reuse codefrom previous version
   int Normalize; // To reuse code from previous version
 
   sampling = *(wave->pTime+1)-*(wave->pTime);
@@ -128,13 +129,13 @@ int  resampling (int index, double resampling, float *pDataR, signal *wave){
 
   rindex=0;
 
-  t0= *(wave->pTime+index);
+  // t0= *(wave->pTime+index);
   Normalize= (wave->Normalize);
 if (index+n <= wave->nSamples){ 
   if (n < wave->Npoints){  //
     for (i=0; i< n; i++){
       do{
-	time= t0+((float)rindex*resampling);
+	time= t0+(((float)rindex+1)*resampling);
 	*(wave->pTimeR+rindex)=time;
 	intermediate = IntLin (*(wave->pTime+index+i), *(wave->pData+index+i), *(wave->pTime+index+i+1),  *(wave->pData+index+i+1),time);
 	if (Normalize){
@@ -145,12 +146,12 @@ if (index+n <= wave->nSamples){
 	else
 	  *(pDataR+rindex)= intermediate;
         rindex++;
-	time= t0+((float)rindex*resampling); //use one ahead to see the future jump over the limit
+	time= t0+(((float)rindex+1)*resampling); //use one ahead to see the future jump over the limit
       }while (time < *(wave->pTime+index+i+1));
       paddingvalue= *(pDataR+rindex-1);
     }
     for (i=rindex;i< wave->Npoints;i++){ //padding with the last value
-	time= t0+((float)i*resampling); 
+      time= t0+(((float)i+1)*resampling); 
        *(pDataR+i)= paddingvalue;
        *(wave->pTimeR+i)= time;
     }
@@ -158,7 +159,7 @@ if (index+n <= wave->nSamples){
    else{ //For real time, see the possibility to use the value of sample-1
        
     for (rindex=0;rindex< wave->Npoints;rindex++){
-      time= t0+((float)rindex*resampling); 
+      time= t0+(((float)rindex+1)*resampling); 
       i=  IndexEvent( wave->pTime+index,wave->Npoints,time,1);
 	intermediate = IntLin (*(wave->pTime+index+i), *(wave->pData+index+i), *(wave->pTime+index+i+1),  *(wave->pData+index+i+1),time);
 	if (Normalize)
@@ -409,7 +410,7 @@ void  M_values (char * path, model *Model){
 	     }
 	     else
 	       Model->data[i][t]= dummy;
-	     printf("valor: %f \n",dummy);
+	     //	     printf("valor: %f \n",dummy);
 	  }
 
 	  line++;
@@ -500,10 +501,10 @@ double distance (float *input, model *Model){
    int i,j,t;
    float *ind_vector;
    float *ind_X;
-   float dummy;
-   float norm=0;
+  double dummy;
+  double  norm=0;
    double e=0;
-   float sum=0; 
+   double  sum=0; 
 
 	
 
@@ -515,25 +516,38 @@ double distance (float *input, model *Model){
 
 	for (i=0;i < Model->nvectors; i++){
                 norm=0;
+		printf("\n vector: ");
 		for (t=0;t < Model->coef_vector;t++){
 		   dummy= *(ind_vector+t)-*(ind_X+t);
-		   printf("Distancia %.10f in: %.10f  Vector X: %.10f \n",dummy,*(ind_vector+t),*(ind_X+t));
+                  
+		   //if((i<2) or (i>Model->nvectors-2))
+		     //		     printf("Distancia %.10f in: %.10f  Vector X: %.10f t: %d \n",dummy,*(ind_vector+t),*(ind_X+t),t);
+		   printf("%.10f \t",*(ind_vector+t));
 		   dummy= pow(dummy,2);
+		   // printf("Cuadrado : %.10f\n",dummy); 
 		   norm=norm+dummy;
+		   // printf("norma : %.10f\n",norm); 
 		}
+		ind_vector= *(Model->data+1+i);
+		//printf("norma : %.10f\n",norm); 
+ 		//norm= pow(norm,2);
+		// printf("x2 : %.10f\n",norm); 
 		norm=norm*-1.00*Model->gamma;
+		// printf("-gamma : %.10f\n",norm); 
 		e=exp(norm);
-		sum=sum+ *(Model->alfa+i)*e;	
+		//printf("e : %.10f\n",e); 
+		sum=sum + (*(Model->alfa+i)*e);
+		 printf("sum : %.10f\n",sum); 
 	}
-	return (sum-Model->bias);   
+	return (sum+Model->bias);   
 
 }
 
 
 int bufferFree (int *indice, int nModelos){
 
-  if(*indice != 0){
-	*(indice)--;
+     if(*indice != 0){
+       --*(indice);
      }
      else{
        *(indice)= nModelos-1;
@@ -586,4 +600,28 @@ int iwindow_1 (int *indice, int nModelos){
 
 }
 
+int iwindow1 (int *indice, int nModelos){
 
+
+  return((*indice + 1) > nModelos-1 ? 0 : *indice + 1);
+
+
+}
+
+
+double prod_vect (float *input, float *Coeficientes, float bias, int nCoeficientes){
+
+  int i;
+  double sum;
+
+
+  sum=0;
+  for (i=0;i<nCoeficientes;i++){
+    sum+= *(input+i) * *(Coeficientes+i);
+  }
+
+  return (sum+bias);
+
+
+
+}

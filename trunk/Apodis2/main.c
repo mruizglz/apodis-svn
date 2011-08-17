@@ -58,6 +58,8 @@ main(int argc, char *argv[]){
 
   model *pModel;  //Pointer to struct model
 
+  double tini;
+
   float dummy;
   float **Mdummy;
 
@@ -82,6 +84,8 @@ main(int argc, char *argv[]){
 
   int iWindow=0;
   int ndummy=0;
+
+	FILE *filelog;
 
 
   /* Test of input parameters */
@@ -138,7 +142,7 @@ main(int argc, char *argv[]){
       while(*ptr > 32)
 	++ptr;
       *ptr = 0;
-      printf("Valor de txt %s \n",txt);
+      //      printf("Valor de txt %s \n",txt);
 
       strcpy((pSignal+nlin)->name,txt);
        ++nlin;
@@ -159,16 +163,16 @@ main(int argc, char *argv[]){
 
 
   for(i=0;i<conf_Nsignals;i++){
-    printf("Leido del struct %s \n",(pSignal+i)->name);
+    //    printf("Leido del struct %s \n",(pSignal+i)->name);
   }
 
   for (i=0;i<conf_Nsignals;i++){
-    printf("Reading %s from shot %d\n",(pSignal+i)->name, shotNumber);
+    //    printf("Reading %s from shot %d\n",(pSignal+i)->name, shotNumber);
     fflush(stdout);
 
     getnwds_((pSignal+i)->name, &shotNumber, &ndata, &error, (long) strlen((pSignal+i)->name)); //Determine the space needed
 
-    printf ("Debugg nData: %d error: %d\n", ndata, error);
+    //    printf ("Debugg nData: %d error: %d\n", ndata, error);
     if ((!error) && (ndata > 0)){  //data are available
       if( ((pSignal+i)->pData = (float *) malloc(ndata*sizeof(float))) == (float *) 0 ){ //Allocate memory
               free(pSignal);
@@ -229,12 +233,15 @@ main(int argc, char *argv[]){
    (pSignal+i)->Min= *(Minimums+i);
    (pSignal+i)->Normalize= *(ToNormalize+i);   
    //   printf("Leido del struct %d \n",(pSignal+i)->Normalize);
-   printf("VMax: %.10f  VMin:  %.10f \n",*(Maximums+i),*(Minimums+i));
+   //   printf("VMax: %.10f  VMin:  %.10f \n",*(Maximums+i),*(Minimums+i));
   }
 
  free(Maximums); //free array values are copied in the struct
  free(Minimums);
  free(ToNormalize);
+
+
+	filelog = fopen("W.txt", "w");
 
   
   //Look for t0 for the signals, the reference is Ipla signal 0
@@ -277,16 +284,21 @@ main(int argc, char *argv[]){
   //Now the buffer are going to be filled with resampling data window.
 
 
-/**********  This will be the star of process loop  **************/
-  
+
   for (i=0;i<conf_Nsignals;i++){ //Resampling for raw signals only 
-    //     printf ("struct status signal %s : \n",(pSignal+i)->name);
-    // printf ("maximum: %f minimum: %f Npuntos: %d nsamples: %d \n",(pSignal+i)->Max,(pSignal+i)->Min,(pSignal+i)->Npoints,(pSignal+i)->nSamples);
-     // printf ("pData: %d pTime: %d pTimeR: %d \n",(pSignal+i)->pData,(pSignal+i)->pTime,(pSignal+i)->pTimeR);
+    //       printf ("struct status signal %s : \n",(pSignal+i)->name);
+    //   printf ("maximum: %f minimum: %f Npuntos: %d nsamples: %d \n",(pSignal+i)->Max,(pSignal+i)->Min,(pSignal+i)->Npoints,(pSignal+i)->nSamples);
+    // printf ("pData: %d pTime: %d pTimeR: %d \n",(pSignal+i)->pData,(pSignal+i)->pTime,(pSignal+i)->pTimeR);
+     tini=*((pSignal+i)->pTime+*(t0+i));
      for (j=conf_NModels-1;j>=0;j--){
        // printf ("pM %d : ",(pSignal+i)->pM+j);
-        t=resampling ( *(t0+i), conf_Sampling,*((pSignal+i)->pM+j) ,(pSignal+i));
+       //      printf("****** signal %d time  %f  *******\n",i,*((pSignal+i)->pTime+*(t0+i)));
+       t=resampling ( *(t0+i), conf_Sampling,tini,*((pSignal+i)->pM+j) ,(pSignal+i));
+       tini= *((pSignal+i)->pTimeR+31); //Final time for buffer time resamplig. inizial value next iteration
        *(t0+i)+=t;
+ 
+       //       for(t=0;t<32;t++) printf(" valor tiempo %.3f \t",*((pSignal+i)->pTimeR+t));
+       //	printf("**************\n");
 	if (t==0){
 	   printf("Signal end reach \n"),
 	   exit(0);
@@ -417,9 +429,9 @@ main(int argc, char *argv[]){
      (pModel+i)->data= Mdummy;
 
      M_values (*(PathMx+i), pModel+i); //Load model firts M1 M2 M3
-     printf("\n Vectot m1 \n");
-     for(t=0;t<11;t++)
-       printf("%.10f \t",*(Mdummy+t));
+     //    printf("\n Vectot m1 \n");
+     //for(t=0;t<11;t++)
+     //printf("%.10f \t",*(Mdummy+t));
    }
 
    Read_M (conf_PathR, R);
@@ -437,7 +449,7 @@ main(int argc, char *argv[]){
  
 
    for (i=0;i<conf_NModels;i++){ //mean ipla 
-     ModelParts[0][2-i]= Mean (*((pSignal)->pM+i), conf_Npoints);
+     ModelParts[0][i]= Mean (*((pSignal)->pM+i), conf_Npoints);  
    }
 
    for (i=0;i<conf_NModels;i++){ //des ipla 
@@ -458,7 +470,7 @@ main(int argc, char *argv[]){
 
      
  
-     ModelParts[1][2-i]= Desv (resabs, conf_Npoints/2);
+     ModelParts[1][i]= Desv (resabs, conf_Npoints/2);
 
      //     printf("\n modelim  %f \n", ModelParts[1][i]);
 
@@ -470,7 +482,7 @@ main(int argc, char *argv[]){
 //Process loca
 
    for (i=0;i<conf_NModels;i++){ //mean loca
-     ModelParts[2][2-i]= Mean (*((pSignal+1)->pM+i), conf_Npoints);
+     ModelParts[2][i]= Mean (*((pSignal+1)->pM+i), conf_Npoints); 
    }
 
    for (i=0;i<conf_NModels;i++){ //des loca
@@ -483,20 +495,20 @@ main(int argc, char *argv[]){
  
      Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
  
-     ModelParts[3][2-i]= Desv (resabs, conf_Npoints/2);
+     ModelParts[3][i]= Desv (resabs, conf_Npoints/2);
 
    }
 
 //Process density
 
    for (i=0;i<conf_NModels;i++){ //mean density 
-     ModelParts[4][2-i]= Mean (*((pSignal+3)->pM+i), conf_Npoints);
+     ModelParts[4][i]= Mean (*((pSignal+3)->pM+i), conf_Npoints);
    }
 
 //Process Desv. Energy
 
    for (i=0;i<conf_NModels;i++){ //mean Energy
-     ModelParts[5][2-i]= Mean (*((pSignal+4)->pM+i), conf_Npoints);
+     ModelParts[5][i]= Mean (*((pSignal+4)->pM+i), conf_Npoints);
    }
 
    for (i=0;i<conf_NModels;i++){ //des Desv. Energy 
@@ -509,7 +521,7 @@ main(int argc, char *argv[]){
  
      Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
  
-     ModelParts[6][2-i]= Desv (resabs, conf_Npoints/2);
+     ModelParts[6][i]= Desv (resabs, conf_Npoints/2);
 
    }
 
@@ -518,20 +530,10 @@ main(int argc, char *argv[]){
 //Process Der. Inductancia
 
    for (i=0;i<conf_NModels;i++){ //mean der inductacia
-     ModelParts[7][2-i]= Mean (*((pSignal+7)->pM+i), conf_Npoints);
+     ModelParts[7][i]= Mean (*((pSignal+7)->pM+i), conf_Npoints);
    }
 
-   //Debug
-     pBuffer= *((pSignal+7)->pM);
-    salvaOutput( pBuffer, "LOG71.txt");
-     pBuffer= *((pSignal+7)->pM+1);
-    salvaOutput( pBuffer, "LOG72.txt");
-     pBuffer= *((pSignal+7)->pM+2);
-    salvaOutput( pBuffer, "LOG73.txt");
  
-
-
-
    for (i=0;i<conf_NModels;i++){ //des der inductacia
      pBuffer= *((pSignal+7)->pM+i);
      //printf("\n Valores de la senal 7 (8-1) %d \n",i);
@@ -544,14 +546,38 @@ main(int argc, char *argv[]){
  
      Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
  
-     ModelParts[8][2-i]= Desv (resabs, conf_Npoints/2);
+     ModelParts[8][i]= Desv (resabs, conf_Npoints/2);
 
    }
+
+  //Debug
+   /*     pBuffer= *((pSignal+2)->pM+2);
+    salvaOutput( pBuffer, "LOG53.txt");
+     pBuffer= *((pSignal+2)->pM+1);
+    salvaOutput( pBuffer, "LOG52.txt");
+    pBuffer= *((pSignal+2)->pM);
+    salvaOutput( pBuffer, "LOG51.txt");
+
+     pBuffer= *((pSignal+2)->pM+2);
+    salvaOutput( pBuffer, "LOG63.txt");
+     pBuffer= *((pSignal+2)->pM+1);
+    salvaOutput( pBuffer, "LOG62.txt");
+    pBuffer= *((pSignal+2)->pM);
+    salvaOutput( pBuffer, "LOG61.txt");
+
+
+     pBuffer= *((pSignal+7)->pM+2);
+    salvaOutput( pBuffer, "LOG83.txt");
+     pBuffer= *((pSignal+7)->pM+1);
+    salvaOutput( pBuffer, "LOG82.txt");
+     pBuffer= *((pSignal+7)->pM);
+    salvaOutput( pBuffer, "LOG81.txt");
+   */
 
 //Process Cociente
 
    for (i=0;i<conf_NModels;i++){ //mean quotien
-     ModelParts[9][2-i]= Mean (*((pSignal+8)->pM+i), conf_Npoints);
+     ModelParts[9][i]= Mean (*((pSignal+8)->pM+i), conf_Npoints);
    }
 
    for (i=0;i<conf_NModels;i++){ //des der inductacia
@@ -564,29 +590,41 @@ main(int argc, char *argv[]){
  
      Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
  
-     ModelParts[10][2-i]= Desv (resabs, conf_Npoints/2);
+     ModelParts[10][i]= Desv (resabs, conf_Npoints/2);
 
    }
-   for(j=0;j<11;j++){
+
+
+   /*
+   for(j=7;j<8;j++){
      for (i=0;i<conf_NModels;i++){ //des der inductacia
-       printf("\n Valores signal: %d valor:  %.10f ", j, ModelParts[j][i]);
+       printf("\n Valores signal: %d valor:  %.10f ", j, ModelParts[j][2-i]);
+       fprintf(filelog,"%.10f \n",ModelParts[j][2-i]);
      }
    }
-
+*/
   
    //  for (i=0;i<conf_NModels;i++){ //des der inductacia
   //     salvaOutput (ModelParts, "LOG.txt");
        //       printf("\n Valores signal: %d valor:  %f ", j, ModelParts[j][i]);
 		//}
 
-  
+   //printf("\n");
+
+   printf ("Entrada \n ");  
   for (i=0;i<11;i++){
     ColumnModel[i]= ModelParts[i][0];
+     printf (" %.10f \t ",ColumnModel[i]);
   }
-  printf("\n");
   D[0]=  distance (ColumnModel, pModel);
+  printf ("Distancia: %.10f \n",D[0]);
+
+  // dummy= prod_vect (ColumnModel, *pModel->data, pModel->bias, 11);
+
+  //printf ("Distancia dummy : %.10f \n",dummy);
   exit(0);
 
+  
   for (i=0;i<11;i++){
     ColumnModel[i]= ModelParts[i][1];
   }
@@ -595,15 +633,27 @@ main(int argc, char *argv[]){
   for (i=0;i<11;i++){
     ColumnModel[i]= ModelParts[i][2];
   }
+  
   D[2]=  distance (ColumnModel, pModel+2);
+  //  printf ("Distancia: %.10f \n",D[0]);
+  //  printf ("Distancia: %.10f \n",D[1]);
+  // printf ("Distancia: %.10f \n",D[2]);
+
+  //  printf("tR: %f \t %f  \t  %f  \t %f \n",*((pSignal)->pTimeR+31),*((pSignal+2)->pTimeR+31),*((pSignal+3)->pTimeR+31),*((pSignal+7)->pTimeR+31));
+
+  fprintf(filelog,"tiempo \t S1 \t S2 \t S3 \t S4 \t S5 \t S6 \t S7 \t S8 \tS9 \t S10 \t S11 \t D3 \t   D2 \t    D1 \t      R\n");
 
 
-
-  printf ("\n Reading distance \n");
-
+  // printf ("\n Reading distance \n");
+  //  fprintf(filelog,"vector D: %.10f \t %.10f \t %.10f \n",D[2],D[1],D[0]);
 
   Result_Model= D[2]*R[3] + D[1]*R[2] + D[0]*R[1] +R[0];
-  printf("Resultado D2: %.10f  D1: %.10f  D0: %.10f \n",D[2],D[1],D[0]);
+  //printf("Resultado D2: %.10f  D1: %.10f  D0: %.10f \n",D[2],D[1],D[0]);
+  // fprintf(filelog,"%.10f \n",Result_Model);
+
+ fprintf(filelog,"%.3f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f %.5f %.5f %.5f %.5f\n",*((pSignal)->pTimeR+31),ModelParts[0][0],ModelParts[1][0],ModelParts[2][0],ModelParts[3][0],ModelParts[4][0],ModelParts[5][0],ModelParts[6][0],ModelParts[7][0],ModelParts[8][0],ModelParts[9][0],ModelParts[10][0],D[2],D[1],D[0],Result_Model);
+
+
 
 //Evaluar result si es activo escribir alarma y exit
 // si no bucle
@@ -620,20 +670,26 @@ main(int argc, char *argv[]){
    // LOOP
    ******************************/
 
+
  
+
    finish= FALSE;
 
    do{
      j=bufferFree(&iWindow,conf_NModels);
      for (i=0;i<conf_Nsignals;i++){ //Resampling for raw signals only 
-        t=resampling ( *(t0+i), conf_Sampling,*((pSignal+i)->pM+j) ,(pSignal+i));
+       //if (i==0)    printf("tiempos indice t: %d \n", *(t0+i));
+       ndummy=iwindow1(&iWindow,conf_NModels); 
+       t=resampling ( *(t0+i), conf_Sampling,*((pSignal+ndummy)->pTimeR+31) ,*((pSignal+i)->pM+j) ,(pSignal+i));
 	*(t0+i)+=t;
+      	//       if (i==0) printf("tiempos indice t retorno : %d \n",t);
 	if (t==0){
 	  printf("\n ***********  Signal end reach No disruption **************\n");
 	  finish= TRUE;
 	  break;
 	}
      }
+    
 
      //Here the raw signal are reading and ready to be used
  
@@ -770,40 +826,57 @@ main(int argc, char *argv[]){
  
      ModelParts[10][j]= Desv (resabs, conf_Npoints/2);
 
- 
+
+
+     //  printf("\n Valores signal: %d valor:  %.10f ", 0, ModelParts[0][iWindow]);
+     //  fprintf(filelog,"%.10f \n",ModelParts[8][iWindow]);
 
   
   for (i=0;i<11;i++){
     ColumnModel[i]= ModelParts[i][iWindow];
   }
-  D[0]=  distance (ColumnModel, pModel+iWindow);
+  //  D[0]=  distance (ColumnModel, pModel+iWindow);
+  D[0]=  distance (ColumnModel, pModel); //El modelo siempre es el mismo que D es decir 0 en este caso
 
   ndummy=iwindow_1(&iWindow,conf_NModels);
   for (i=0;i<11;i++){
     ColumnModel[i]= ModelParts[i][ndummy];
   }
-  D[2]=  distance (ColumnModel, pModel+ndummy);
+  // D[2]=  distance (ColumnModel, pModel+ndummy);
+  D[2]=  distance (ColumnModel, pModel+2); //El modelo siempre es el mismo que D es decir 2 en este caso
 
   ndummy= iwindow_1(&ndummy,conf_NModels);
   for (i=0;i<11;i++){
     ColumnModel[i]= ModelParts[i][ndummy];
   }
-  D[1]=  distance (ColumnModel, pModel+ndummy);
+  // D[1]=  distance (ColumnModel, pModel+ndummy);
+  D[1]=  distance (ColumnModel, pModel+1); //El modelo siempre es el mismo que D es decir 1 en este caso
 
-     //   distance (ModelParts, pModel, conf_NModels, D);
+
+
+
+  //  fprintf(filelog,"vector D: %.10f \t %.10f \t %.10f \n",D[2],D[1],D[0]);
 
    Result_Model= D[2]*R[3] + D[1]*R[2] + D[0]*R[1] +R[0];
+   //   printf("Result_Model: %.5f \n",Result_Model);
+   // fprintf(filelog,"%.10f \n",Result_Model);
+
+
+ fprintf(filelog,"%.3f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f\t%.5f %.5f %.5f %.5f %.5f\n",*((pSignal)->pTimeR+31),ModelParts[0][j],ModelParts[1][j],ModelParts[2][j],ModelParts[3][j],ModelParts[4][j],ModelParts[5][j],ModelParts[6][j],ModelParts[7][j],ModelParts[8][j],ModelParts[9][j],ModelParts[10][j],D[2],D[1],D[0],Result_Model);
+
 
    if (Result_Model > 0){
      printf("\n ********* Disruption *********** \n");
      finish=TRUE;
    }
 
+ 
+   
 
    }while(!finish );
 
 
-
+	fclose(filelog);
 
 
 
