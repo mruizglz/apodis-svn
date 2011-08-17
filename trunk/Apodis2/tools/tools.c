@@ -130,7 +130,7 @@ int  resampling (int index, double resampling, float *pDataR, signal *wave){
 
   t0= *(wave->pTime+index);
   Normalize= (wave->Normalize);
- 
+if (index+n <= wave->nSamples){ 
   if (n < wave->Npoints){  //
     for (i=0; i< n; i++){
       do{
@@ -168,6 +168,9 @@ int  resampling (int index, double resampling, float *pDataR, signal *wave){
        *(wave->pTimeR+rindex)= time;  
     }
    }
+}
+else
+   n=0;
   return (n);
 }
 
@@ -484,4 +487,44 @@ double Desv (double *pData, int npoints){ //Ojo se puede ir el puntero y podria 
   result= sqrt(dc);
 
 }
+
+
+void distance (float (*input)[3], model *Model, int nModels, float *D){
+ 
+   int i,j,t;
+   float *ind_vector;
+   float *ind_X;
+   float dummy;
+   float norm=0;
+   float e=0;
+   float sum=0; 
+
+	
+
+
+   for (j=0;j < nModels;j++){
+
+   	ind_vector= *(Model->data+j);   
+   	ind_X= *(input+j);   
+
+	sum=0;
+	for (i=0;i < Model->nvectors; i++){
+                norm=0;
+		for (t=0;t < Model->coef_vector;t++){
+		   dummy= *(ind_vector+t)-*(ind_X+t);
+		   dummy= pow(dummy,2);
+		   norm=norm+dummy;
+		}
+		norm=norm*-1.00;
+		e=exp(norm);
+		sum=sum+ *(Model->alfa+i)*e;	
+	}
+	*(D+j)= sum-Model->bias;   
+
+   }
+
+
+
+}
+
 
