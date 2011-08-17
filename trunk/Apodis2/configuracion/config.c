@@ -85,7 +85,7 @@ char *conf_smtpServer     = "192.168.2.100";*/
 static void c_set_string(char *v1, const char *v2, void *t);
 static void c_set_int(char *v1, const char *v2, void *t);
 static void c_set_unity(char *v1, const char *v2, void *t);
-static void c_set_float(char *v1, const char *v2, void *t);
+static void c_set_double(char *v1, const char *v2, void *t);
 
 
 struct ccommand {
@@ -106,12 +106,12 @@ typedef struct ccommand Command;
 #define S1A STMT_ONE_ARG
 
 struct ccommand clist[] = {
-	{"Threshold", 		S1A,c_set_float,	&conf_Threshold},
-	{"Maximum", 	        S1A,c_set_float,	&conf_PathMax},
-	{"Minimum", 	        S1A,c_set_float,	&conf_PathMin},
+	{"Threshold", 		S1A,c_set_double,	&conf_Threshold},
+	{"Maximum", 	        S1A,c_set_double,	&conf_PathMax},
+	{"Minimum", 	        S1A,c_set_double,	&conf_PathMin},
 	{"PathModel", 		S1A,c_set_string,	&conf_PathModel},
 	{"PathR", 		S1A,c_set_string,	&conf_PathR},
-	{"Sampling", 		S1A,c_set_float,	&conf_Sampling},
+	{"Sampling", 		S1A,c_set_double,	&conf_Sampling},
 	{"Npoints",	        S1A,c_set_int,		&conf_Npoints},
 	{"Nsignals",	        S1A,c_set_int,		&conf_Nsignals},
 	{"NcalculateSignals",	S1A,c_set_int,		&conf_NcalculateSignals},
@@ -217,7 +217,7 @@ static void c_set_int(char *v1, const char *v2, void *t)
 	}
 }
 
-static void c_set_float(char *v1, const char *v2, void *t)
+static void c_set_double(char *v1, const char *v2, void *t)
 {
 	char *endptr;
 	double i;

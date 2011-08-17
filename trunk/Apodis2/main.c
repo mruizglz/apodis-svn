@@ -39,18 +39,18 @@ main(int argc, char *argv[]){
 
 
   int *t0;
-  float *Maximums;
-  float *Minimums;
+  double *Maximums;
+  double *Minimums;
 
 
   int i,j,t,z;  // for loops
   int error;  //Error indicator
   int ndata; //Number of datos of a signal
 
-  float **pArray; //pointer to array
-  float *pBuffer; //Pointer too buffer
-  float *pBuffer1; //Pointer too buffer
-  float *pBuffer2; //Pointer too buffer
+  double **pArray; //pointer to array
+  double *pBuffer; //Pointer too buffer
+  double *pBuffer1; //Pointer too buffer
+  double *pBuffer2; //Pointer too buffer
 
   int  *ToNormalize; // pointer to array with actions about normalize proccess
                      //[12]={TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE};
@@ -60,17 +60,17 @@ main(int argc, char *argv[]){
 
   double tini;
 
-  float dummy;
-  float **Mdummy;
+  double dummy;
+  double **Mdummy;
 
   int **rowptr;
 
-  float R[4];   //Este hay que pasarlo tambien a dinamico
-  float ModelParts[11][3];//Este hay que pasarlo tambien a dinamico
-  float ColumnModel[11];
-  float D[3];	//tambien a dinámico
+  double R[4];   //Este hay que pasarlo tambien a dinamico
+  double ModelParts[11][3];//Este hay que pasarlo tambien a dinamico
+  double ColumnModel[11];
+  double D[3];	//tambien a dinámico
 
-  float Result_Model;
+  double Result_Model;
   int finish;
 
 
@@ -174,12 +174,12 @@ main(int argc, char *argv[]){
 
     //    printf ("Debugg nData: %d error: %d\n", ndata, error);
     if ((!error) && (ndata > 0)){  //data are available
-      if( ((pSignal+i)->pData = (float *) malloc(ndata*sizeof(float))) == (float *) 0 ){ //Allocate memory
+      if( ((pSignal+i)->pData = (double *) malloc(ndata*sizeof(double))) == (double *) 0 ){ //Allocate memory
               free(pSignal);
 	      printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+i)->name, shotNumber);
 	      exit(0);
        }
-      if(((pSignal+i)->pTime = (float *) malloc(ndata*sizeof(float))) == (float *) 0){ //Allocate memory
+      if(((pSignal+i)->pTime = (double *) malloc(ndata*sizeof(double))) == (double *) 0){ //Allocate memory
 	      free((pSignal+i)->pData);
               free(pSignal);
 	      printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+i)->name, shotNumber);
@@ -217,8 +217,8 @@ main(int argc, char *argv[]){
  
 
 
-  Maximums= (float *) malloc(sizeof(float)*Nsignals); //Alocate space for Maximums and Minimums
-  Minimums= (float *) malloc(sizeof(float)*Nsignals); //Alocate space for Maximums and Minimums
+  Maximums= (double *) malloc(sizeof(double)*Nsignals); //Alocate space for Maximums and Minimums
+  Minimums= (double *) malloc(sizeof(double)*Nsignals); //Alocate space for Maximums and Minimums
   ToNormalize= (int *) malloc(sizeof(int)*Nsignals); //Alocate space for normaliza Flag
 
   // Reading Maximums and Minimums values
@@ -265,13 +265,13 @@ main(int argc, char *argv[]){
   //make pointer array and allocate memory for memory windows in models
 
   for (i=0;i<Nsignals;i++){ //Allocate array's pointer and pointer to resamplig time
-    (pSignal+i)->pM=  malloc(sizeof(float)*conf_NModels); //Allocate space for arrays pointers  
+    (pSignal+i)->pM=  malloc(sizeof(double)*conf_NModels); //Allocate space for arrays pointers  
   }
  
   for (i=0;i<Nsignals;i++){ //Allocate memory buffers
-    (pSignal+i)->pTimeR= malloc(sizeof(float)*conf_Npoints); //Buffer for resampling time
+    (pSignal+i)->pTimeR= malloc(sizeof(double)*conf_Npoints); //Buffer for resampling time
     for(j=0;j<conf_NModels;j++){
-      *((pSignal+i)->pM+j)= (float *) malloc(conf_Npoints*sizeof(float));
+      *((pSignal+i)->pM+j)= (double *) malloc(conf_Npoints*sizeof(double));
       if(*((pSignal+i)->pM+j) == NULL ){ //Do so for easy code ready
 	free(pSignal);
         printf("\n**** Not available memory for Model windows  %s, \n",(pSignal+i)->name );
@@ -402,14 +402,14 @@ main(int argc, char *argv[]){
      N_vectors(*(PathMx+i),&(pModel+i)->nvectors , &(pModel+i)->coef_vector);
      printf("Tamanos Modelo: %d vectores: %d coeficientes: %d \n",i,(pModel+i)->nvectors , (pModel+i)->coef_vector);
 
-     (pModel+i)->alfa = malloc(sizeof(float )*(pModel+i)->nvectors); //Allocate space for arrays
+     (pModel+i)->alfa = malloc(sizeof(double )*(pModel+i)->nvectors); //Allocate space for arrays
      if (Mdummy == NULL){
         free(pSignal);
         printf ("Not space for alfa data array \n");
         exit(0);
      }
 
-     Mdummy = malloc(sizeof(float *)*(pModel+i)->nvectors); //Allocate space for arrays of data
+     Mdummy = malloc(sizeof(double *)*(pModel+i)->nvectors); //Allocate space for arrays of data
 
      if (Mdummy == NULL){
        free(pSignal);
@@ -417,7 +417,7 @@ main(int argc, char *argv[]){
        exit(0);
      }
      for (j=0;j<(pModel+i)->nvectors;j++){
-       Mdummy[j]= malloc(sizeof(float)*(pModel+i)->coef_vector); //Allocate space for arrays
+       Mdummy[j]= malloc(sizeof(double)*(pModel+i)->coef_vector); //Allocate space for arrays
        if (Mdummy[j] == NULL){
 	 free(pSignal);
 	 printf ("Not space for Mmodel data array \n");

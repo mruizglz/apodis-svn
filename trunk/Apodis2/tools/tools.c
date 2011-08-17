@@ -30,7 +30,7 @@ Tools set to Resamplig and Normalize discharge signals
 //*******************************************************
 
 
-int IndexEvent( float *pBufferin, int n_samples, float Threshold, int type){
+int IndexEvent( double *pBufferin, int n_samples, double Threshold, int type){
 
      int i; // Index
 
@@ -63,9 +63,9 @@ int IndexEvent( float *pBufferin, int n_samples, float Threshold, int type){
 //   
 //*******************************************************
 
-float IntLin (float xi, float yi, float xf, float yf, float in){
+double IntLin (double xi, double yi, double xf, double yf, double in){
 
-  float m,b;
+  double m,b;
 
    m= (yf-yi)/(xf-xi);
  
@@ -85,11 +85,11 @@ float IntLin (float xi, float yi, float xf, float yf, float in){
 //***********************************************
 
 
-float normalize (float Max, float Min, float data){
+double normalize (double Max, double Min, double data){
 
   // printf("Normalizacion Max: %f Min: %f ",Max,Min);
 
-  return(float) (data-Min)/(Max-Min);
+  return(double) (data-Min)/(Max-Min);
 
 
 
@@ -109,18 +109,18 @@ float normalize (float Max, float Min, float data){
 //*************************************************
 
 
-//int  resampling (int index, double resampling, float t0, float *pDataR, signal *wave, int Normalize){
-int  resampling (int index, double resampling, double t0, float *pDataR, signal *wave){
+//int  resampling (int index, double resampling, double t0, double *pDataR, signal *wave, int Normalize){
+int  resampling (int index, double resampling, double t0, double *pDataR, signal *wave){
 
   int n; // iterations value
   int i; 
   int rindex; //index to complete the resampling buffer
   double sampling; //samplind rate of input signal
-  float time; //resamplig time sample
-  float paddingvalue; //padding Value, last sample
-  float intermediate; //Intermediate Buffer for easy code rading
+  double time; //resamplig time sample
+  double paddingvalue; //padding Value, last sample
+  double intermediate; //Intermediate Buffer for easy code rading
 
-  //  float t0; //To reuse codefrom previous version
+  //  double t0; //To reuse codefrom previous version
   int Normalize; // To reuse code from previous version
 
   sampling = *(wave->pTime+1)-*(wave->pTime);
@@ -135,7 +135,7 @@ if (index+n <= wave->nSamples){
   if (n < wave->Npoints){  //
     for (i=0; i< n; i++){
       do{
-	time= t0+(((float)rindex+1)*resampling);
+	time= t0+(((double)rindex+1)*resampling);
 	*(wave->pTimeR+rindex)=time;
 	intermediate = IntLin (*(wave->pTime+index+i), *(wave->pData+index+i), *(wave->pTime+index+i+1),  *(wave->pData+index+i+1),time);
 	if (Normalize){
@@ -146,12 +146,12 @@ if (index+n <= wave->nSamples){
 	else
 	  *(pDataR+rindex)= intermediate;
         rindex++;
-	time= t0+(((float)rindex+1)*resampling); //use one ahead to see the future jump over the limit
+	time= t0+(((double)rindex+1)*resampling); //use one ahead to see the future jump over the limit
       }while (time < *(wave->pTime+index+i+1));
       paddingvalue= *(pDataR+rindex-1);
     }
     for (i=rindex;i< wave->Npoints;i++){ //padding with the last value
-      time= t0+(((float)i+1)*resampling); 
+      time= t0+(((double)i+1)*resampling); 
        *(pDataR+i)= paddingvalue;
        *(wave->pTimeR+i)= time;
     }
@@ -159,7 +159,7 @@ if (index+n <= wave->nSamples){
    else{ //For real time, see the possibility to use the value of sample-1
        
     for (rindex=0;rindex< wave->Npoints;rindex++){
-      time= t0+(((float)rindex+1)*resampling); 
+      time= t0+(((double)rindex+1)*resampling); 
       i=  IndexEvent( wave->pTime+index,wave->Npoints,time,1);
 	intermediate = IntLin (*(wave->pTime+index+i), *(wave->pData+index+i), *(wave->pTime+index+i+1),  *(wave->pData+index+i+1),time);
 	if (Normalize)
@@ -178,7 +178,7 @@ else
 
 /**********************************************
 // This fuction read a txt file and convert
-// each line to a float.
+// each line to a double.
 // path: Pointer to Path name
 // buffer: pointer to result's array
 // return the number of lines read
@@ -186,7 +186,7 @@ else
 
 
 
-int ReadFloatTxt(char *path, float *buffer){
+int ReadFloatTxt(char *path, double *buffer){
 
 	FILE *file;
 
@@ -194,7 +194,7 @@ int ReadFloatTxt(char *path, float *buffer){
 	char buf[1025], *b, *c;
 	int line = 0;
 	char *endptr;
-	float tmp;
+	double tmp;
 
 
 	endptr= NULL;
@@ -208,7 +208,7 @@ int ReadFloatTxt(char *path, float *buffer){
 	while (fgets(buf, 1024, file) != NULL) 
 	{
 		b=buf;
-		*(buffer+line)= (float)strtod(b,&endptr);
+		*(buffer+line)= (double)strtod(b,&endptr);
 		++line;
 	
 	}
@@ -225,10 +225,10 @@ int ReadFloatTxt(char *path, float *buffer){
 
 
 
-float Mean (float *pData, int npoints){ //Ojo se puede ir el puntero y podria retornar infinito
+double Mean (double *pData, int npoints){ //Ojo se puede ir el puntero y podria retornar infinito
 
 
-  float result;
+  double result;
 
   int i;
 
@@ -239,7 +239,7 @@ float Mean (float *pData, int npoints){ //Ojo se puede ir el puntero y podria re
     result+= *(pData+i);
   }
 
-  result= (float) result/npoints;
+  result= (double) result/npoints;
 
   return (result);
 
@@ -378,7 +378,7 @@ void  M_values (char * path, model *Model){
 	int i;
 	int len;
 	char *endptr;
-	float dummy;
+	double dummy;
 
 	file = fopen(path, "r");
 
@@ -390,8 +390,8 @@ void  M_values (char * path, model *Model){
 	fgets(buf, 1024, file);
 	b=buf;
 	endptr= NULL;
-	Model->gamma= (float)strtod(b,&endptr);
-	Model->bias= (float)strtod(endptr,&endptr);
+	Model->gamma= (double)strtod(b,&endptr);
+	Model->bias= (double)strtod(endptr,&endptr);
 	printf("Gamma: %f   bias: %f \n",Model->gamma,Model->bias);
 	
 	for (i=0;i<Model->nvectors;i++){
@@ -400,9 +400,9 @@ void  M_values (char * path, model *Model){
 	  b=buf;
 	  endptr= NULL;
 	  t=0;
-	  Model->data[i][t]= (float)strtod(b,&endptr);
+	  Model->data[i][t]= (double)strtod(b,&endptr);
 	  for (t=1;t<Model->coef_vector+1;t++){
-	     dummy= (float)strtod(endptr,&endptr);
+	     dummy= (double)strtod(endptr,&endptr);
 
 	     if(t==Model->coef_vector){
 	       *(Model->alfa+i)= dummy;
@@ -421,7 +421,7 @@ void  M_values (char * path, model *Model){
 	
 }
 
-void  Read_M (char * path, float *M){
+void  Read_M (char * path, double *M){
 
 
 	FILE *file;
@@ -432,7 +432,7 @@ void  Read_M (char * path, float *M){
 	int i;
 	int len;
 	char *endptr;
-	float dummy;
+	double dummy;
 
 	file = fopen(path, "r");
 
@@ -444,10 +444,10 @@ void  Read_M (char * path, float *M){
 	fgets(buf, 1024, file);
 	b=buf;
 	endptr= NULL;
-	*(M+3)= (float)strtod(b,&endptr);
-	*(M+2)= (float)strtod(endptr,&endptr);
-	*(M+1)= (float)strtod(endptr,&endptr);
-	*M= (float)strtod(endptr,&endptr);
+	*(M+3)= (double)strtod(b,&endptr);
+	*(M+2)= (double)strtod(endptr,&endptr);
+	*(M+1)= (double)strtod(endptr,&endptr);
+	*M= (double)strtod(endptr,&endptr);
 
 
 	
@@ -496,11 +496,11 @@ double Desv (double *pData, int npoints){ //Ojo se puede ir el puntero y podria 
 }
 
 
-double distance (float *input, model *Model){
+double distance (double *input, model *Model){
  
    int i,j,t;
-   float *ind_vector;
-   float *ind_X;
+   double *ind_vector;
+   double *ind_X;
   double dummy;
   double  norm=0;
    double e=0;
@@ -557,7 +557,7 @@ int bufferFree (int *indice, int nModelos){
 
 }
 
-void salvaOutput( float *input, char *path){
+void salvaOutput( double *input, char *path){
 
 	FILE *file;
 
@@ -567,9 +567,9 @@ void salvaOutput( float *input, char *path){
 	int i;
 	int len;
 	char *endptr;
-	float dummy;
+	double dummy;
 
-	float *ind_X;
+	double *ind_X;
 
 
 
@@ -609,7 +609,7 @@ int iwindow1 (int *indice, int nModelos){
 }
 
 
-double prod_vect (float *input, float *Coeficientes, float bias, int nCoeficientes){
+double prod_vect (double *input, double *Coeficientes, double bias, int nCoeficientes){
 
   int i;
   double sum;
