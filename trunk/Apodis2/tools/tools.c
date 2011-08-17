@@ -406,11 +406,11 @@ void  M_values (char * path, model *Model){
 
 	     if(t==Model->coef_vector){
 	       *(Model->alfa+i)= dummy;
-	       //printf("valor: %f \n",dummy);
+	       //	       printf("valor: %f \n",dummy);
 	     }
 	     else
 	       Model->data[i][t]= dummy;
-	     //	     printf("valor: %f \n",dummy);
+	     // printf("valor: %f \t",dummy);
 	  }
 
 	  line++;
@@ -505,7 +505,7 @@ double distance (double *input, model *Model){
   double  norm=0;
    double e=0;
    double  sum=0; 
-
+   double u=0;
 	
 
 
@@ -516,28 +516,33 @@ double distance (double *input, model *Model){
 
 	for (i=0;i < Model->nvectors; i++){
                 norm=0;
-		printf("\n vector: ");
+		//	printf("vector: %d \n ", i);
 		for (t=0;t < Model->coef_vector;t++){
 		   dummy= *(ind_vector+t)-*(ind_X+t);
                   
 		   //if((i<2) or (i>Model->nvectors-2))
 		     //		     printf("Distancia %.10f in: %.10f  Vector X: %.10f t: %d \n",dummy,*(ind_vector+t),*(ind_X+t),t);
-		   printf("%.10f \t",*(ind_vector+t));
+		   //  printf("Vector %.10f \t",*(ind_vector+t));
+		   //printf("Input %.10f \t",*(ind_X+t));
+		   //printf("Resta %.10f \t",dummy);
+
 		   dummy= pow(dummy,2);
-		   // printf("Cuadrado : %.10f\n",dummy); 
+		   //printf("Cuadrado : %.10f\t",dummy); 
 		   norm=norm+dummy;
-		   // printf("norma : %.10f\n",norm); 
+		   //printf("norma : %.10f\n",norm); 
 		}
 		ind_vector= *(Model->data+1+i);
 		//printf("norma : %.10f\n",norm); 
  		//norm= pow(norm,2);
 		// printf("x2 : %.10f\n",norm); 
 		norm=norm*-1.00*Model->gamma;
-		// printf("-gamma : %.10f\n",norm); 
+		//printf("-gamma : %.10f\t",norm); 
 		e=exp(norm);
-		//printf("e : %.10f\n",e); 
-		sum=sum + (*(Model->alfa+i)*e);
-		 printf("sum : %.10f\n",sum); 
+		//printf("e : %.10f\t",e); 
+		u= (*(Model->alfa+i)*e);
+		//printf("alfa : %.10f\t",*(Model->alfa+i)); 
+		sum=sum + u;
+		//printf("sum : %.10f\n",sum); 
 	}
 	return (sum+Model->bias);   
 
