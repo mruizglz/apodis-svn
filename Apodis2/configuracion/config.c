@@ -39,7 +39,8 @@ char     *conf_PathMin = "./trainingXX/MinCoefficients.txt";
 
 char     *conf_PathModel  =  "./trainingXX/ModelDescription.txt";
 
-char     *conf_PathR   =  "./trainingXX/RCoefficients.txt";
+//char     *conf_PathR   =  "./trainingXX/RCoefficients.txt";
+char     *conf_PathR   =  "./trainingXX/M.txt";
 
 char     *conf_PathNormalize   =  "./trainingXX/Normalize.txt";
 
