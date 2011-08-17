@@ -31,7 +31,7 @@ typedef struct {
 int IndexEvent( float *pBufferin, int n_samples, float Threshold, int type);
 float IntLin (float xi, float yi, float xf, float yf, float in);
 //int  resampling (int index, double resampling, float t0, float *pDataR, signal *wave, int Normalize);
-int  resampling (int index, double resampling, float *pDataR, signal *wave);
+int  resampling (int index, double resampling, double t0, float *pDataR, signal *wave);
 float normalize (float Max, float Min, float data);
 int  ReadFloatTxt(char *path, float *buffer);
 float Mean (float *pData, int npoints);
@@ -48,7 +48,8 @@ double distance (float *input, model *Model);
 int bufferFree (int *indice, int nModelos);
 void salvaOutput( float *input, char *path);
 int iwindow_1 (int *indice, int nModelos);
-
+double prod_vect (float *input, float *Coeficientes, float bias, int nCoeficientes);
+int iwindow1 (int *indice, int nModelos);
 
 
 
