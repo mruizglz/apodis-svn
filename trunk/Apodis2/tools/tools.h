@@ -41,8 +41,13 @@ void  N_vectors(char * path, int *nvectors, int *ncoefficients);
 void  M_values (char * path, model *Model);
 void  Read_M (char * path, float *M);
 void Absolute ( double (*x)[2], double *result, int npoints);
+//void Absolute ( double *rea, double *imj, double *result, int npoints);
 double Desv (double *pData, int npoints);
-void distance (float (*input)[3], model *Model, int nModels, float *D);
+//void distance (float (*input)[3], model *Model, int nModels, float *D);
+double distance (float *input, model *Model);
+int bufferFree (int *indice, int nModelos);
+void salvaOutput( float *input, char *path);
+int iwindow_1 (int *indice, int nModelos);
 
 
 
