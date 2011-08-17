@@ -37,9 +37,7 @@ int      conf_NModels = 3;
 char     *conf_PathMax = "./trainingXX/MaxCoefficients.txt";
 char     *conf_PathMin = "./trainingXX/MinCoefficients.txt";
 
-char     *conf_PathD1  =  "./trainingXX/D1Coefficients.txt";
-char     *conf_PathD2  =  "./trainingXX/D2Coefficients.txt";
-char     *conf_PathD3  =  "./trainingXX/D3Coefficients.txt";
+char     *conf_PathModel  =  "./trainingXX/ModelDescription.txt";
 
 char     *conf_PathR   =  "./trainingXX/RCoefficients.txt";
 
@@ -110,9 +108,7 @@ struct ccommand clist[] = {
 	{"Threshold", 		S1A,c_set_float,	&conf_Threshold},
 	{"Maximum", 	        S1A,c_set_float,	&conf_PathMax},
 	{"Minimum", 	        S1A,c_set_float,	&conf_PathMin},
-	{"PathD1", 		S1A,c_set_string,	&conf_PathD1},
-	{"PathD2", 		S1A,c_set_string,	&conf_PathD2},
-	{"PathD3", 		S1A,c_set_string,	&conf_PathD3},
+	{"PathModel", 		S1A,c_set_string,	&conf_PathModel},
 	{"PathR", 		S1A,c_set_string,	&conf_PathR},
 	{"Sampling", 		S1A,c_set_float,	&conf_Sampling},
 	{"Npoints",	        S1A,c_set_int,		&conf_Npoints},

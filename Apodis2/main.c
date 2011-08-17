@@ -32,7 +32,7 @@ main(int argc, char *argv[]){
 
   FILE *fp;   //temporal pointer for file access
   int nlin;   //Counts the number of lines in file signallist. So the numebr of a raw signals
-  char     txt[CHARMAX];   //Temporal array to hold oath names array for inout
+  char     txt[CHARMAX];   //Temporal array to hold path names array for input
   char   *ptr;   // temporal pointer to string
   char  title[53];
   char  units[11];
@@ -43,7 +43,7 @@ main(int argc, char *argv[]){
   float *Minimums;
 
 
-  int i,j,t;  // for loops
+  int i,j,t,z;  // for loops
   int error;  //Error indicator
   int ndata; //Number of datos of a signal
 
@@ -54,7 +54,14 @@ main(int argc, char *argv[]){
 
   int  *ToNormalize; // pointer to array with actions about normalize proccess
                      //[12]={TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE};
+  char **PathMx;  //Path to files M for model
+
+  model *pModel;  //Pointer to struct model
+
   float dummy;
+  float **Mdummy;
+
+ int **rowptr;
 
 
 
@@ -84,9 +91,7 @@ main(int argc, char *argv[]){
   printf ("NModels  %d \n",conf_NModels);
   printf ("Maximum %s \n",conf_PathMax);
   printf ("Minimum %s \n",conf_PathMin);
-  printf ("Path d1 %s \n",conf_PathD1);
-  printf ("path d2 %s \n",conf_PathD2);
-  printf ("path d3 %s \n",conf_PathD3);
+  printf ("path Model %s \n",conf_PathModel);
   printf ("path r %s \n",conf_PathR);
   printf ("path Normalize  %s \n",conf_PathNormalize);
 
@@ -181,11 +186,13 @@ main(int argc, char *argv[]){
   }
 
   //At this point the signal have been read form the JET BBDD
-
+  /*
   for (i=1143;i<1155;i++){
     printf ("Signal t: %f valor %f \n",*((pSignal+0)->pTime+i),*((pSignal+0)->pData+i));
 
   }
+  */
+
 
   Maximums= (float *) malloc(sizeof(float)*Nsignals); //Alocate space for Maximums and Minimums
   Minimums= (float *) malloc(sizeof(float)*Nsignals); //Alocate space for Maximums and Minimums
@@ -202,13 +209,12 @@ main(int argc, char *argv[]){
    (pSignal+i)->Max= *(Maximums+i);
    (pSignal+i)->Min= *(Minimums+i);
    (pSignal+i)->Normalize= *(ToNormalize+i);   
-   printf("Leido del struct %d \n",(pSignal+i)->Normalize);
+   //   printf("Leido del struct %d \n",(pSignal+i)->Normalize);
   }
 
  free(Maximums); //free array values are copied in the struct
  free(Minimums);
  free(ToNormalize);
-
 
   
   //Look for t0 for the signals, the reference is Ipla signal 0
@@ -256,7 +262,10 @@ main(int argc, char *argv[]){
        // printf ("pM %d : ",(pSignal+i)->pM+j);
         t=resampling ( *(t0+i), conf_Sampling,*((pSignal+i)->pM+j) ,(pSignal+i));
        *(t0+i)+=t;
-
+       printf("\n Cambio senal \n");
+       pBuffer=*((pSignal+i)->pM+j);
+       //       for(z=0;z<32;z++)
+       //	 printf("Valor normalizado: %f ",*(pBuffer+z));
      }
      //   printf("\n");
 
@@ -298,8 +307,71 @@ main(int argc, char *argv[]){
         
   //Signal 8. Done
 
-  PRINTSIGNAL (pSignal);
+  // PRINTSIGNAL (pSignal);
   //  PRINTSIGNAL (pSignal+7);
+
+
+  //Reading Model Information
+
+   PathMx=  malloc(sizeof(char *)*conf_NModels); //Alocate space for Path to Models properties
+ 
+   for (i=0;i<conf_NModels;i++){ //Allocate array's pointer 
+     *(PathMx+i)= (char *) malloc(sizeof(char)*CHARMAX); //Allocate space for arrays
+   }
+   if (ReadModelTxt(conf_PathModel, PathMx) != conf_NModels){ //Check the number of models
+     printf ("Review Lenght FILE Model description \n");
+     exit(0);
+   }
+
+   pModel= (model *) malloc(sizeof(model)*conf_NModels); //Alocate space for signals
+   if (pModel == NULL){
+       free(pSignal);
+       printf ("Not space for Mpdel struct \n");
+       exit(0);
+   }
+
+   for (i=0;i<conf_NModels;i++){ //Allocate array data value for model 
+     N_vectors(*(PathMx+i),&(pModel+i)->nvectors , &(pModel+i)->coef_vector);
+     printf("Tamanos Modelo: %d vectores: %d coeficientes: %d \n",i,(pModel+i)->nvectors , (pModel+i)->coef_vector);
+
+     (pModel+i)->alfa = malloc(sizeof(float )*(pModel+i)->nvectors); //Allocate space for arrays
+     if (Mdummy == NULL){
+        free(pSignal);
+        printf ("Not space for alfa data array \n");
+        exit(0);
+     }
+
+     Mdummy = malloc(sizeof(float *)*(pModel+i)->nvectors); //Allocate space for arrays of data
+
+     if (Mdummy == NULL){
+       free(pSignal);
+       printf ("Not space for Mmodel data array \n");
+       exit(0);
+     }
+     for (j=0;j<(pModel+i)->nvectors;j++){
+       Mdummy[j]= malloc(sizeof(float)*(pModel+i)->coef_vector); //Allocate space for arrays
+       if (Mdummy[j] == NULL){
+	 free(pSignal);
+	 printf ("Not space for Mmodel data array \n");
+	 exit(0);
+       }
+
+     }
+
+     (pModel+i)->data= Mdummy;
+
+     M_values (*(PathMx+i), pModel+i);
+   }
+
+
+
+   //here the model is read
+
+
+  //    N_vectors("p.txt" , &dmmy, &dmmy1);
+
+  //   printf ("resultados %d %d \n",dmmy,dmmy1);
+
 
 }
 
