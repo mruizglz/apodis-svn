@@ -1,2 +1,2 @@
-gcc main.c  ./configuracion/config.c ./tools/tools.c ./fft/fft.c  -lnetcsl7 -o main -lm
+gcc main.c  ./configuracion/config.c ./tools/tools.c ./fft/fft.c  -o main -lm
 

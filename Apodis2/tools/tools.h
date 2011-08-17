@@ -42,6 +42,7 @@ void  M_values (char * path, model *Model);
 void  Read_M (char * path, float *M);
 void Absolute ( double (*x)[2], double *result, int npoints);
 double Desv (double *pData, int npoints);
+void distance (float (*input)[3], model *Model, int nModels, float *D);
 
 
 
