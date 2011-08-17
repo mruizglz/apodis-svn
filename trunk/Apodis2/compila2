@@ -1,0 +1,1 @@
+gcc main.c  ./configuracion/config.c ./tools/tools.c  -lnetcsl7 -o main
