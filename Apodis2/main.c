@@ -25,6 +25,7 @@ void PRINTSIGNAL( signal *entrada);
 main(int argc, char *argv[]){
  
   char signalList[CHARMAX];  //input name of signals file
+  char ResultFileName[CHARMAX]; //File name to save rsults. If File exits append results, if no File is created
   int shotNumber;  // Input Shot number
   int Nsignals;    //Number the signal to use input+calculated
 
@@ -36,6 +37,9 @@ main(int argc, char *argv[]){
   char   *ptr;   // temporal pointer to string
   char  title[53];
   char  units[11];
+
+  float *SignalJET; //Para paso intermedio
+  float *TimeJET; //Para paso intermedio
 
 
   int *t0;
@@ -86,15 +90,17 @@ main(int argc, char *argv[]){
   int ndummy=0;
 
 	FILE *filelog;
+	FILE *fileRes;
 
 
   /* Test of input parameters */
-  if(argc != 3)
+  if(argc != 4)
     {
       printf("\nProgram usage:\n\n");
       printf("> Main signalList shotNumber\n\n");
       printf("signalList: file with the JPF signal paths\n");
       printf("shotNumber: discharge to process\n");
+      printf("Result File: File to append results \n");
       printf("\n\n");
       exit(0);
     }
@@ -102,6 +108,7 @@ main(int argc, char *argv[]){
   /* Input parameters to program variables */
   strcpy(signalList, argv[1]);
   shotNumber = atoi(argv[2]);
+  strcpy(ResultFileName, argv[3]);
 
 
   read_config_files();
@@ -186,13 +193,33 @@ main(int argc, char *argv[]){
 	      exit(0);
        }
 
+      if( (SignalJET = (float *) malloc(ndata*sizeof(float))) == (float *) 0 ){ //Allocate memory
+              free(pSignal);
+	      printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+i)->name, shotNumber);
+	      exit(0);
+       }
+      if((TimeJET = (float *) malloc(ndata*sizeof(float))) == (float *) 0){ //Allocate memory
+	      free((pSignal+i)->pData);
+              free(pSignal);
+	      printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+i)->name, shotNumber);
+	      exit(0);
+       }
+
+
+
        // Pre set last char of returned text to 0 for c string  
        title [sizeof(title) - 1] = 0;
        units [sizeof(units) - 1] = 0;
-       getdat_((pSignal+i)->name, &shotNumber, (pSignal+i)->pData, (pSignal+i)->pTime,&ndata , title, units, &error,(long) strlen((pSignal+i)->name), sizeof(title) - 1l, sizeof(units) - 1l);
+       //  getdat_((pSignal+i)->name, &shotNumber, (pSignal+i)->pData, (pSignal+i)->pTime,&ndata , title, units, &error,(long) strlen((pSignal+i)->name), sizeof(title) - 1l, sizeof(units) - 1l);
+       getdat_((pSignal+i)->name, &shotNumber, SignalJET, TimeJET ,&ndata , title, units, &error,(long) strlen((pSignal+i)->name), sizeof(title) - 1l, sizeof(units) - 1l);
+
        (pSignal+i)->nSamples= ndata;
        (pSignal+i)->Npoints= conf_Npoints;
-
+     
+       for (j=0;j<ndata; j++){
+	 *((pSignal+i)->pData+j)= (double) *(SignalJET+j);
+	 *((pSignal+i)->pTime+j)= (double) *(TimeJET+j);
+       }
     }
     else{
      
@@ -242,7 +269,7 @@ main(int argc, char *argv[]){
 
 
 	filelog = fopen("W.txt", "w");
-
+	fileRes = fopen( ResultFileName, "a");
   
   //Look for t0 for the signals, the reference is Ipla signal 0
 
@@ -251,15 +278,15 @@ main(int argc, char *argv[]){
 
   *t0= IndexEvent((pSignal)->pData,(pSignal)->nSamples,conf_Threshold,0); //Look for the time when Ipla < Threshold 
 
-  printf("Indice de t0 %d \n",*t0);
-  printf("Valor de t0 %f \n",*(pSignal->pTime+(*t0)));
+  //  printf("Indice de t0 %d \n",*t0);
+  //  printf("Valor de t0 %f \n",*(pSignal->pTime+(*t0)));
 
 
   // t0 for all signals, Only for raw signals
 
   for (i=1;i < conf_Nsignals;i++){
     *(t0+i)=  IndexEvent( (pSignal+i)->pTime,(pSignal+i)->nSamples,*((pSignal)->pTime+(*t0)),1);
-    printf("Valor de t0 %f \n",*(pSignal->pTime+(*t0+i)));
+    //    printf("Valor de t0 %f \n",*(pSignal->pTime+(*t0+i)));
   }
   
   //make pointer array and allocate memory for memory windows in models
@@ -300,7 +327,8 @@ main(int argc, char *argv[]){
        //       for(t=0;t<32;t++) printf(" valor tiempo %.3f \t",*((pSignal+i)->pTimeR+t));
        //	printf("**************\n");
 	if (t==0){
-	   printf("Signal end reach \n"),
+	  printf("Signal end reach \n");
+          fprintf (fileRes,"%d \t %s \t %.3f \n",shotNumber,"0",*((pSignal)->pTimeR+31));
 	   exit(0);
 	}
 	//       printf("\n Cambio senal \n");
@@ -429,11 +457,12 @@ main(int argc, char *argv[]){
      (pModel+i)->data= Mdummy;
 
      M_values (*(PathMx+i), pModel+i); //Load model firts M1 M2 M3
+
      //    printf("\n Vectot m1 \n");
      //for(t=0;t<11;t++)
      //printf("%.10f \t",*(Mdummy+t));
    }
-
+ 
    Read_M (conf_PathR, R);
 
    printf ("The model has been read \n");
@@ -611,18 +640,34 @@ main(int argc, char *argv[]){
 
    //printf("\n");
 
-   printf ("Entrada \n ");  
+   //  printf ("Entrada \n ");  
   for (i=0;i<11;i++){
     ColumnModel[i]= ModelParts[i][0];
-     printf (" %.10f \t ",ColumnModel[i]);
+    //     printf (" %.10f \t ",ColumnModel[i]);
   }
-  D[0]=  distance (ColumnModel, pModel);
-  printf ("Distancia: %.10f \n",D[0]);
 
+  //para probrar distancia
+  /* ColumnModel[0]=  0.666;
+  ColumnModel[1]=  0.00524;
+  ColumnModel[2]=  0.01588;
+  ColumnModel[3]=  0.00301;
+  ColumnModel[4]=  0.001;
+  ColumnModel[5]=  0.41767;
+  ColumnModel[6]=  0.00218;
+  ColumnModel[7]=  0.50595;
+  ColumnModel[8]=  0.00033;
+  ColumnModel[9]=  0;
+  ColumnModel[10]= 0.00002;*/
+
+
+
+  D[0]=  distance (ColumnModel, pModel);
+  // printf ("Distancia: %.10f \n",D[0]);
+  
   // dummy= prod_vect (ColumnModel, *pModel->data, pModel->bias, 11);
 
   //printf ("Distancia dummy : %.10f \n",dummy);
-  exit(0);
+ 
 
   
   for (i=0;i<11;i++){
@@ -685,6 +730,7 @@ main(int argc, char *argv[]){
       	//       if (i==0) printf("tiempos indice t retorno : %d \n",t);
 	if (t==0){
 	  printf("\n ***********  Signal end reach No disruption **************\n");
+	  fprintf (fileRes,"%d \t %s \t %.3f \n",shotNumber,"-1",*((pSignal)->pTimeR+31));
 	  finish= TRUE;
 	  break;
 	}
@@ -866,7 +912,8 @@ main(int argc, char *argv[]){
 
 
    if (Result_Model > 0){
-     printf("\n ********* Disruption *********** \n");
+     printf("\n ********* Disruption at  t: %f       *********** \n",*((pSignal)->pTimeR+31));
+     fprintf (fileRes,"%d \t %s \t %.3f \n",shotNumber,"+1",*((pSignal)->pTimeR+31));
      finish=TRUE;
    }
 
@@ -877,7 +924,7 @@ main(int argc, char *argv[]){
 
 
 	fclose(filelog);
-
+	fclose(fileRes);
 
 
 
