@@ -1,3 +1,4 @@
+
 /*
 
 Program implemented by Juan Manuel Lopez, Universidad Politecnica de Madrid
@@ -60,7 +61,7 @@ int IndexEvent( double *pBufferin, int n_samples, double Threshold, int type){
 
 //********************************************************
 //   This function makes a linear interpolation
-//   
+//
 //*******************************************************
 
 double IntLin (double xi, double yi, double xf, double yf, double in){
@@ -68,9 +69,9 @@ double IntLin (double xi, double yi, double xf, double yf, double in){
   double m,b;
 
    m= (yf-yi)/(xf-xi);
- 
+
   b= yi-m*xi;
- 
+
 
   return (m*in+b);
 
@@ -98,10 +99,10 @@ double normalize (double Max, double Min, double data){
 
 //*************************************************
 //  This function makes a resample of a signal
-//  index: is initial index for the buffer to use 
-//  resampling: the resampling desired 
-//  t0: Initial value of the Interpolation buffer start 
-//  wave: pointer to struct signal 
+//  index: is initial index for the buffer to use
+//  resampling: the resampling desired
+//  t0: Initial value of the Interpolation buffer start
+//  wave: pointer to struct signal
 //  pDataR: pointer to resampling data buffer
 //  normalize: Flag to Normalize, = true (1) Yes
 //
@@ -113,7 +114,7 @@ double normalize (double Max, double Min, double data){
 int  resampling (int index, double resampling, double t0, double *pDataR, signal *wave){
 
   int n; // iterations value
-  int i; 
+  int i;
   int rindex; //index to complete the resampling buffer
   double sampling; //samplind rate of input signal
   double time; //resamplig time sample
@@ -123,7 +124,7 @@ int  resampling (int index, double resampling, double t0, double *pDataR, signal
   //  double t0; //To reuse codefrom previous version
   int Normalize; // To reuse code from previous version
 
-  sampling = *(wave->pTime+1)-*(wave->pTime);
+  sampling = *(wave->pTime+index+1)-*(wave->pTime+index);
 
   n= wave->Npoints*resampling / sampling; // number of iterations to resampling
 
@@ -131,8 +132,10 @@ int  resampling (int index, double resampling, double t0, double *pDataR, signal
 
   // t0= *(wave->pTime+index);
   Normalize= (wave->Normalize);
-if (index+n <= wave->nSamples){ 
+  //printf ("Resampling  %s  Index: %d Dato: %f Normaliza: %d  \n",wave->name,index,*(wave->pData+index),Normalize);
+if (index+n <= wave->nSamples){
   if (n < wave->Npoints){  //
+
     for (i=0; i< n; i++){
       do{
 	time= t0+(((double)rindex+1)*resampling);
@@ -143,30 +146,32 @@ if (index+n <= wave->nSamples){
 	  //	printf(" Res: %f \n",*(pDataR+rindex));
 	}
 
-	else
+	else{
 	  *(pDataR+rindex)= intermediate;
+//	  printf(" Intermediate: %f \n",*(pDataR+rindex));
+        }
         rindex++;
 	time= t0+(((double)rindex+1)*resampling); //use one ahead to see the future jump over the limit
       }while (time < *(wave->pTime+index+i+1));
       paddingvalue= *(pDataR+rindex-1);
     }
     for (i=rindex;i< wave->Npoints;i++){ //padding with the last value
-      time= t0+(((double)i+1)*resampling); 
+      time= t0+(((double)i+1)*resampling);
        *(pDataR+i)= paddingvalue;
        *(wave->pTimeR+i)= time;
     }
   }
    else{ //For real time, see the possibility to use the value of sample-1
-       
+
     for (rindex=0;rindex< wave->Npoints;rindex++){
-      time= t0+(((double)rindex+1)*resampling); 
+      time= t0+(((double)rindex+1)*resampling);
       i=  IndexEvent( wave->pTime+index,wave->Npoints,time,1);
 	intermediate = IntLin (*(wave->pTime+index+i), *(wave->pData+index+i), *(wave->pTime+index+i+1),  *(wave->pData+index+i+1),time);
 	if (Normalize)
 	  *(pDataR+rindex)= normalize (wave->Max, wave->Min, intermediate);
 	else
 	  *(pDataR+rindex)= intermediate;
-       *(wave->pTimeR+rindex)= time;  
+       *(wave->pTimeR+rindex)= time;
     }
    }
 }
@@ -204,13 +209,13 @@ int ReadFloatTxt(char *path, double *buffer){
 	if (!file){
 	  printf ("File in ReadFloatTxt Not Found \n");
 	  exit(EXIT_FAILURE);
-	} 
-	while (fgets(buf, 1024, file) != NULL) 
+	}
+	while (fgets(buf, 1024, file) != NULL)
 	{
 		b=buf;
 		*(buffer+line)= (double)strtod(b,&endptr);
 		++line;
-	
+
 	}
 	return (line);
 
@@ -246,7 +251,7 @@ double Mean (double *pData, int npoints){ //Ojo se puede ir el puntero y podria 
 }
 
 /**********************************************
-// This fuction read the Normalize txt file 
+// This fuction read the Normalize txt file
 // and fill the input array with the normalization Flag
 // path: Pointer to Path name
 // buffer: pointer to result's array
@@ -271,13 +276,13 @@ int ReadNormalizeTxt(char *path, int *buffer){
 	if (!file){
 	  printf ("File for Normalize Not Found \n");
 	  exit(EXIT_FAILURE);
-	} 
-	while (fgets(buf, 1024, file) != NULL) 
+	}
+	while (fgets(buf, 1024, file) != NULL)
 	{
 		b=buf;
 		*(buffer+line)= strtol(b, &endptr, 0); /* Automatic base 10/16/8 switching */
 		++line;
-	
+
 	}
 	return (line);
 
@@ -285,7 +290,7 @@ int ReadNormalizeTxt(char *path, int *buffer){
 
 
 /**********************************************
-// This fuction read the Descripcion Model txt file 
+// This fuction read the Descripcion Model txt file
 // The file has the path to Model vector Files
 // path: Pointer to Path name
 // buffer: pointer to result's array
@@ -306,13 +311,13 @@ int ReadModelTxt(char *path, char **buffer){
 	if (!file){
 	  printf ("File for Model description Not Found \n");
 	  exit(EXIT_FAILURE);
-	} 
-	while (fgets(buf, 1024, file) != NULL) 
+	}
+	while (fgets(buf, 1024, file) != NULL)
 	{
-	
-	   strcpy(*(buffer+line), buf); 
+
+	   strcpy(*(buffer+line), buf);
 	   ++line;
-	
+
 	}
 	return (line);
 
@@ -333,37 +338,37 @@ void  N_vectors(char * path, int *nvectors, int *ncoefficients){
 	char buf[1025];
 	int line = 0;
 	int t=0;
-	int i;
+	int i=0;
 	int len;
 	char *p;
 
 	p= path;
-	i=0;
+	i=1;
 	while (*(p+i++)!= '\n');
 	*(p+i-1)= '\0';
-	
+
 	file = fopen(path, "r");
 	if (!file){
 	  printf ("File for coeficientes Not Found %s \n", path);
 	  exit(EXIT_FAILURE);
-	} 
-	while (fgets(buf, 1024, file) != NULL) 
+	}
+	while (fgets(buf, 1024, file) != NULL)
 	{
 	  if(line == 1){
 	    len=strlen(buf);
-	    for (i=1;i<len;i++)
-	      if(isspace(buf[i]) && !isspace(buf[i-1]) && (buf[i] != '\n'))
+	    for (i=1;i<len;i++){
+	      if(isspace(buf[i]) && !isspace(buf[i-1]) && ((buf[i] != '\r') &&  (buf[i] != '\n')  )){
 		t++;
+	      }
 	    }
+	  }
 	  //else do nothing
 	   if (buf[0] != '\n')
 	     ++line;
 	}
-
 	*nvectors= line-1;
 	*ncoefficients= t;
 
-	
 }
 
 
@@ -380,23 +385,27 @@ void  M_values (char * path, model *Model){
 	char *endptr;
 	double dummy;
 
+	printf("Entra \n");
 	file = fopen(path, "r");
 
 	if (!file){
 	  printf ("File for Model coeficientes Not Found %s \n", path);
 	  exit(EXIT_FAILURE);
-	} 
+	}
 
 	fgets(buf, 1024, file);
 	b=buf;
 	endptr= NULL;
+        printf("b : %s \n",b);
 	Model->gamma= (double)strtod(b,&endptr);
 	Model->bias= (double)strtod(endptr,&endptr);
-	printf("Gamma: %f   bias: %f \n",Model->gamma,Model->bias);
-	
+	Model->w=(double)strtod(endptr,&endptr);
+
+	printf("Gamma: %f   bias: %f w: %f \n",Model->gamma,Model->bias,Model->w);
+
 	for (i=0;i<Model->nvectors;i++){
 	  fgets(buf, 1024, file);
- 
+
 	  b=buf;
 	  endptr= NULL;
 	  t=0;
@@ -414,11 +423,11 @@ void  M_values (char * path, model *Model){
 	  }
 
 	  line++;
- 
-  
+
+
 	}
 
-	
+
 }
 
 void  Read_M (char * path, double *M){
@@ -439,23 +448,24 @@ void  Read_M (char * path, double *M){
 	if (!file){
 	  printf ("File for Model coeficientes Not Found %s \n", path);
 	  exit(EXIT_FAILURE);
-	} 
+	}
 
 	fgets(buf, 1024, file);
 	b=buf;
 	endptr= NULL;
-	*(M+3)= (double)strtod(b,&endptr);
+	*(M+4)= (double)strtod(b,&endptr);
+	*(M+3)= (double)strtod(endptr,&endptr);
 	*(M+2)= (double)strtod(endptr,&endptr);
 	*(M+1)= (double)strtod(endptr,&endptr);
 	*M= (double)strtod(endptr,&endptr);
 
 
-	
+
 }
 
 //void Absolute ( double *rea, double *imj, double *result, int npoints){
 void Absolute ( double (*x)[2], double *result, int npoints){
- 
+
   int i;
   double p1,p2,p3;
 
@@ -464,7 +474,7 @@ void Absolute ( double (*x)[2], double *result, int npoints){
     *(result+i)= sqrt ( pow (x[i][0],2) + pow (x[i][1],2));
    }
 
- 
+
 }
 
 
@@ -478,6 +488,7 @@ double Desv (double *pData, int npoints){ //Ojo se puede ir el puntero y podria 
   int i;
 
   result=0;
+  dc=0;
 
   for (i=1; i< npoints; i++){ //remove the firt element
     dc+= *(pData+i);
@@ -497,20 +508,20 @@ double Desv (double *pData, int npoints){ //Ojo se puede ir el puntero y podria 
 
 
 double distance (double *input, model *Model){
- 
+
    int i,j,t;
    double *ind_vector;
    double *ind_X;
   double dummy;
   double  norm=0;
    double e=0;
-   double  sum=0; 
+   double  sum=0;
    double u=0;
-	
 
 
-   ind_vector= *(Model->data);   
-   ind_X= input;   
+
+   ind_vector= *(Model->data);
+   ind_X= input;
 
 	sum=0;
 
@@ -519,7 +530,7 @@ double distance (double *input, model *Model){
 		//	printf("vector: %d \n ", i);
 		for (t=0;t < Model->coef_vector;t++){
 		   dummy= *(ind_vector+t)-*(ind_X+t);
-                  
+
 		   //if((i<2) or (i>Model->nvectors-2))
 		     //		     printf("Distancia %.10f in: %.10f  Vector X: %.10f t: %d \n",dummy,*(ind_vector+t),*(ind_X+t),t);
 		   //  printf("Vector %.10f \t",*(ind_vector+t));
@@ -527,24 +538,24 @@ double distance (double *input, model *Model){
 		   //printf("Resta %.10f \t",dummy);
 
 		   dummy= pow(dummy,2);
-		   //printf("Cuadrado : %.10f\t",dummy); 
+		   //printf("Cuadrado : %.10f\t",dummy);
 		   norm=norm+dummy;
-		   //printf("norma : %.10f\n",norm); 
+		   //printf("norma : %.10f\n",norm);
 		}
 		ind_vector= *(Model->data+1+i);
-		//printf("norma : %.10f\n",norm); 
+		//printf("norma : %.10f\n",norm);
  		//norm= pow(norm,2);
-		// printf("x2 : %.10f\n",norm); 
+		// printf("x2 : %.10f\n",norm);
 		norm=norm*-1.00*Model->gamma;
-		//printf("-gamma : %.10f\t",norm); 
+		//printf("-gamma : %.10f\t",norm);
 		e=exp(norm);
-		//printf("e : %.10f\t",e); 
+		//printf("e : %.10f\t",e);
 		u= (*(Model->alfa+i)*e);
-		//printf("alfa : %.10f\t",*(Model->alfa+i)); 
+		//printf("alfa : %.10f\t",*(Model->alfa+i));
 		sum=sum + u;
-		//printf("sum : %.10f\n",sum); 
+		//printf("sum : %.10f\n",sum);
 	}
-	return (sum+Model->bias);   
+	return ((double) (sum+Model->bias)/Model->w);
 
 }
 
@@ -557,7 +568,7 @@ int bufferFree (int *indice, int nModelos){
      else{
        *(indice)= nModelos-1;
      }
-     
+
      return (*indice);
 
 }
@@ -583,18 +594,18 @@ void salvaOutput( double *input, char *path){
 	if (!file){
 	  printf ("File for Output Not Found %s \n", path);
 	  exit(EXIT_FAILURE);
-	} 
+	}
 
-	  //	  ind_X= *(input+i);  
+	  //	  ind_X= *(input+i);
 	  for (t=0;t<32;t++){
 	    fprintf(file,"%.10f \t\n",*(input+t));
           }
-	   
+
 
 	fclose(file);
 
 
-  
+
 }
 
 int iwindow_1 (int *indice, int nModelos){

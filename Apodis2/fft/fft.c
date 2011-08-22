@@ -26,13 +26,15 @@
  ******************************************************************************/
 
 #include "fft.h"
+#include <stdio.h>
 
 
 /* FFT */
 void fft(int N, double (*x)[2], double (*X)[2])
 {
   /* Declare a pointer to scratch space. */
-  double (*XX)[2] = malloc(2 * N * sizeof(double));
+
+ double (*XX)[2] = malloc(2 * N * sizeof(double));
 
  /* Calculate FFT by a recursion. */
   fft_rec(N, 0, 1, x, X, XX);
