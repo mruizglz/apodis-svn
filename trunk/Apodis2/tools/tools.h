@@ -1,3 +1,4 @@
+
 #ifndef _TOOLS_H_
 #define _TOOLS_H_
 
@@ -20,6 +21,7 @@ typedef  struct {
 typedef struct {
   double gamma;
   double bias;
+  double w;
   int coef_vector;
   int nvectors;
   double **data;

@@ -45,40 +45,6 @@ char     *conf_PathR   =  "./trainingXX/M.txt";
 char     *conf_PathNormalize   =  "./trainingXX/Normalize.txt";
 
 
-/*
-char *conf_devRs485UC  =	"/dev/ttyS01";
-char *conf_devRs485MOD =	"/dev/ttyS00";
-char *conf_devGateWay  =	"/dev/ttyS02";
-int   conf_noDaemon;
-int   conf_TOutGateWayms  = 300;
-int   conf_TOutRs485UCms  = 300;
-int   conf_TOutRs485MODms = 300;
-int   conf_TOutResetAlarmams = 2000;
-int   conf_primerModulo  = 1;
-int   conf_modulos  	 = 4;
-int   conf_TOutInitProcs = 30;
-int   conf_TOutProcs     = 60;
-int   conf_TOutConProcs  = 2;
-char *conf_devCtrRs485UC  =	"/dev/gpio4";
-char *conf_devCtrRs485MOD =	"/dev/gpio3";
-char *conf_devCtrResetAlarma = "/dev/gpio16";
-int   conf_resetHigh;
-char *conf_centro		  = "CentroPruebas";
-char *conf_programa		  = "ProgramaPruebas";
-char *conf_nSerie		  = "E-000";
-char *conf_socket		  = "/tmp/gw485socket";
-char *conf_ficheroDatos	  = "/data/gw485.dat";
-char *conf_devCtrBloqEmisora = "/dev/gpio17";
-int   conf_bloqEmisoraHigh;
-int   conf_TOutBloqEmisorams = 2000;
-char *conf_socketDialer="/var/tmp/dialersocket";
-char *conf_smsOrder="SMS ";
-char *conf_smsDelim=",";
-char *conf_smsEndLine="\r";
-int   conf_TOutSms  = 10000;
-char *conf_devGetLocal    = "/dev/gpio8";
-char *conf_devSetLocal    = "/dev/gpio18";
-char *conf_smtpServer     = "192.168.2.100";*/
 
 
 
@@ -107,8 +73,8 @@ typedef struct ccommand Command;
 
 struct ccommand clist[] = {
 	{"Threshold", 		S1A,c_set_double,	&conf_Threshold},
-	{"Maximum", 	        S1A,c_set_double,	&conf_PathMax},
-	{"Minimum", 	        S1A,c_set_double,	&conf_PathMin},
+	{"Maximum", 	        S1A,c_set_string,	&conf_PathMax},
+	{"Minimum", 	        S1A,c_set_string,	&conf_PathMin},
 	{"PathModel", 		S1A,c_set_string,	&conf_PathModel},
 	{"PathR", 		S1A,c_set_string,	&conf_PathR},
 	{"Sampling", 		S1A,c_set_double,	&conf_Sampling},
@@ -116,44 +82,6 @@ struct ccommand clist[] = {
 	{"Nsignals",	        S1A,c_set_int,		&conf_Nsignals},
 	{"NcalculateSignals",	S1A,c_set_int,		&conf_NcalculateSignals},
 	{"NModels",	        S1A,c_set_int,		&conf_NModels},
-
-/*	{"devrs485uc", 		S1A,c_set_string,	&conf_devRs485UC},
-	{"devrs485mod", 	S1A,c_set_string,	&conf_devRs485MOD},
-	{"nodaemon",		S0A,c_set_unity,	&conf_noDaemon},
-	{"toutgatewayms",	S1A,c_set_int,		&conf_TOutGateWayms},
-	{"toutrs485ucms",	S1A,c_set_int,		&conf_TOutRs485UCms},
-	{"toutrs485modms",	S1A,c_set_int,		&conf_TOutRs485MODms},
-	{"toutresetalarmasms",	S1A,c_set_int,	&conf_TOutResetAlarmams},
-	{"primermodulo",	S1A,c_set_int,		&conf_primerModulo},
-	{"modulos",			S1A,c_set_int,		&conf_modulos},
-	{"toutinitprocs",	S1A,c_set_int,		&conf_TOutInitProcs},
-	{"toutprocs",		S1A,c_set_int,		&conf_TOutProcs},
-	{"toutconprocs",	S1A,c_set_int,		&conf_TOutConProcs},
-//	{"toutproc1s",		S1A,c_set_int,		&conf_TOutProc1s},
-//	{"toutconproc1s",	S1A,c_set_int,		&conf_TOutConProc1s},
-//	{"toutproc2s",		S1A,c_set_int,		&conf_TOutProc2s},
-//	{"toutconproc2s",	S1A,c_set_int,		&conf_TOutConProc2s},
-	{"devctrrs485uc", 	S1A,c_set_string,	&conf_devCtrRs485UC},
-	{"devctrrs485mod", 	S1A,c_set_string,	&conf_devCtrRs485MOD},
-	{"devctrresetalarma", 	S1A,c_set_string,	&conf_devCtrResetAlarma},
-	{"resethigh",       S0A,c_set_unity,	&conf_resetHigh},
-	{"centro",			S1A,c_set_string,   &conf_centro},
-	{"programa",        S1A,c_set_string,   &conf_programa},
-	{"nserie",          S1A,c_set_string,   &conf_nSerie},
-	{"socket",          S1A,c_set_string,   &conf_socket},
-	{"ficherodatos",    S1A,c_set_string,  &conf_ficheroDatos},
-	{"devctrvbloqemisora", 	S1A,c_set_string,	&conf_devCtrBloqEmisora},
-	{"bloqemisorahigh", S0A,c_set_unity,	&conf_bloqEmisoraHigh},
-	{"toutbloqemisorams",	S1A,c_set_int,	&conf_TOutBloqEmisorams},
-	{"socketdialer",    S1A,c_set_string,   &conf_socketDialer},
-	{"smsorder",        S1A,c_set_string,   &conf_smsOrder},
-	{"smsdelim",        S1A,c_set_string,   &conf_smsDelim},
-	{"smsendline",      S1A,c_set_string,   &conf_smsEndLine},
-	{"toutsms",     	S1A,c_set_int,		&conf_TOutSms},
-	{"devgetlocal",     S1A,c_set_string,   &conf_devGetLocal},  
-	{"devsetlocal",     S1A,c_set_string,   &conf_devSetLocal},  
-	{"smtpserver",      S1A,c_set_string,   &conf_smtpServer},  */
-
 };
 
 static void c_set_string(char *v1, const char *v2, void *t)
@@ -174,15 +102,15 @@ static void c_set_string(char *v1, const char *v2, void *t)
 		//if (*(char **) t != NULL)
 		//   free(*(char **) t);
 		*(char **) t = (char *)strdup(v1);
-		if (!*(char **) t) 
+		if (!*(char **) t)
 		{
 			PDEBUG("Unable to strdup in c_set_string\n");
 			exit(EXIT_FAILURE);
 		}
 		//done
 		PDEBUG("Config string: %s=%s\n", v2, *(char**)t);
-	} 
-	else 
+	}
+	else
 	{
 		//skipped
 		//PDEBUG("SKIPPED STRING: %s\n", *(char **)t);
@@ -194,23 +122,23 @@ static void c_set_int(char *v1, const char *v2, void *t)
 	char *endptr;
 	int i;
 
-	if (t) 
+	if (t)
 	{
 		i = strtol(v1, &endptr, 0); /* Automatic base 10/16/8 switching */
-		if (*v1 != '\0' && *endptr == '\0') 
+		if (*v1 != '\0' && *endptr == '\0')
 		{
 			*(int *) t = i;
 			//converted
 			PDEBUG("Config int: %s=%d\n", v2, *(int*)t);
-		} 
-		else 
+		}
+		else
 		{
 			/* XXX should tell line number to user */
 			PDEBUG("Unable to convert int in c_set_int\n");
 			exit(EXIT_FAILURE);
 		}
 	}
-	else 
+	else
 	{
 		//skipped
 		//PDEBUG("SKIPPED INT: %d\n", *(int*)t);
@@ -222,24 +150,24 @@ static void c_set_double(char *v1, const char *v2, void *t)
 	char *endptr;
 	double i;
 
-	if (t) 
+	if (t)
 	{
-	        i = strtod (v1, &endptr); 
-		if (*v1 != '\0' && *endptr == '\0') 
+	        i = strtod (v1, &endptr);
+		if (*v1 != '\0' && *endptr == '\0')
 		{
 			*(double *) t = i;
 			//converted
 			PDEBUG("Config int: %s=%f\n", v2, *(double*)t);
 
-		} 
-		else 
+		}
+		else
 		{
 			/* XXX should tell line number to user */
 			PDEBUG("Unable to convert int in c_set_int\n");
 			exit(EXIT_FAILURE);
 		}
 	}
-	else 
+	else
 	{
 		//skipped
 		PDEBUG("SKIPPED FLOAT: %d\n", *(int*)t);
@@ -264,7 +192,7 @@ struct ccommand *lookup_keyword(char *c)
 {
 	struct ccommand *p;
 	for (p = clist;
-		p < clist + (sizeof (clist) / sizeof (struct ccommand)); p++) 
+		p < clist + (sizeof (clist) / sizeof (struct ccommand)); p++)
 		{
 			if (strcasecmp(c, p->name) == 0)
 				return p;
@@ -275,7 +203,7 @@ struct ccommand *lookup_keyword(char *c)
 static void apply_command(Command * p, char *args)
 {
 
-	switch (p->type) 
+	switch (p->type)
 	{
 	case STMT_NO_ARGS:
 		(p->action) (NULL, p->name, p->object);
@@ -292,7 +220,7 @@ static void trim(char *s)
 {
 	char *c = s + strlen(s) - 1;
 
-	while (isspace(*c) && c > s) 
+	while (isspace(*c) && c > s)
 	{
 		*c = '\0';
 		--c;
@@ -305,7 +233,7 @@ static void parse(FILE * f)
 	Command *p;
 	int line = 0;
 
-	while (fgets(buf, 1024, f) != NULL) 
+	while (fgets(buf, 1024, f) != NULL)
 	{
 		++line;
 		b=buf;
@@ -324,12 +252,12 @@ static void parse(FILE * f)
 		while (!isspace(*c))
 			++c;
 
-		if (*c == '\0') 
+		if (*c == '\0')
 		{
 			/* no args */
 			c = NULL;
 		}
-        else 
+        else
 		{
 			/* one or more args */
 
@@ -342,12 +270,13 @@ static void parse(FILE * f)
 		while (isspace(*c))
 			++c;
 
-		if (!p) 
+		if (!p)
 		{
 			PDEBUG( "Line %d: Did not find keyword \"%s\"\n", line,b);
+			printf( "Line %d: Did not find keyword \"%s\"\n", line,b);
 			exit(EXIT_FAILURE);
-		} 
-		else 
+		}
+		else
 		{
 /*			if (c==NULL)
 				PDEBUG("Found keyword %s in \"%s\" (NULL)!\n",
@@ -373,13 +302,13 @@ void read_config_files(void)
 
 	printf ("Reading Configuration FILES \n");
 
-	if (!conf_file_name) 
+	if (!conf_file_name)
 	{
 		conf_file_name = DEFAULT_CONFIG_FILE;
 	}
 
 	config = fopen(conf_file_name, "r");
-	if (!config) 
+	if (!config)
 	{
 	        printf ("Could not open %s for reading.\n", conf_file_name);
 		PDEBUG("Could not open %s for reading.\n", conf_file_name);
@@ -387,4 +316,5 @@ void read_config_files(void)
 	}
 	parse(config);
 	fclose(config);
+	printf("Configuration FILES were read \n");
 }
