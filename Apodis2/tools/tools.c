@@ -124,6 +124,8 @@ int  resampling (int index, double resampling, double t0, double *pDataR, signal
   //  double t0; //To reuse codefrom previous version
   int Normalize; // To reuse code from previous version
 
+  char txt[255];
+
   sampling = *(wave->pTime+index+1)-*(wave->pTime+index);
 
   n= wave->Npoints*resampling / sampling; // number of iterations to resampling
@@ -166,14 +168,20 @@ if (index+n <= wave->nSamples){
     for (rindex=0;rindex< wave->Npoints;rindex++){
       time= t0+(((double)rindex+1)*resampling);
       i=  IndexEvent( wave->pTime+index,wave->Npoints,time,1);
-	intermediate = IntLin (*(wave->pTime+index+i), *(wave->pData+index+i), *(wave->pTime+index+i+1),  *(wave->pData+index+i+1),time);
-	if (Normalize)
-	  *(pDataR+rindex)= normalize (wave->Max, wave->Min, intermediate);
-	else
-	  *(pDataR+rindex)= intermediate;
-       *(wave->pTimeR+rindex)= time;
-    }
+      if (i>0) i--;
+      intermediate = IntLin (*(wave->pTime+index+i), *(wave->pData+index+i), *(wave->pTime+index+i+1),  *(wave->pData+index+i+1),time);
+      if (Normalize)
+    	  *(pDataR+rindex)= normalize (wave->Max, wave->Min, intermediate);
+      else
+    	  *(pDataR+rindex)= intermediate;
+		  *(wave->pTimeR+rindex)= time;
+	  }
    }
+
+     txt[0]= NULL;
+	 sprintf(txt,"Original_%s.txt",wave->name);
+
+  salvaResampling ( pDataR, wave->pTimeR, txt, wave->Npoints);
 }
 else
    n=0;
@@ -573,7 +581,7 @@ int bufferFree (int *indice, int nModelos){
 
 }
 
-void salvaOutput( double *input, char *path){
+void salvaOutput( double *input, char *path, int points){
 
 	FILE *file;
 
@@ -597,7 +605,7 @@ void salvaOutput( double *input, char *path){
 	}
 
 	  //	  ind_X= *(input+i);
-	  for (t=0;t<32;t++){
+	  for (t=0;t<points;t++){
 	    fprintf(file,"%.10f \t\n",*(input+t));
           }
 
@@ -641,3 +649,42 @@ double prod_vect (double *input, double *Coeficientes, double bias, int nCoefici
 
 
 }
+
+void salvaResampling ( double *input, double *tiempo, char *path, int points){
+
+	FILE *file;
+
+	char buf[1025], *b;
+	int line = 0;
+	int t=0;
+	int i;
+	int len;
+	char *endptr;
+	double dummy;
+
+	double *ind_X;
+
+    b=strchr(path,'/');
+    if (b!=NULL)
+    	*(b)='_';
+
+	file = fopen(path, "a");
+
+	if (!file){
+	  printf ("File for Output Not Found %s \n", path);
+	  exit(EXIT_FAILURE);
+	}
+
+	  //	  ind_X= *(input+i);
+	  for (t=0;t<points;t++){
+	    fprintf(file,"%.10f \t %.10f \t\n",*(tiempo+t),*(input+t));
+          }
+
+
+	fclose(file);
+
+
+
+}
+
+

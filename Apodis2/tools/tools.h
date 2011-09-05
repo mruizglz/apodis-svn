@@ -48,11 +48,11 @@ double Desv (double *pData, int npoints);
 //void distance (double (*input)[3], model *Model, int nModels, double *D);
 double distance (double *input, model *Model);
 int bufferFree (int *indice, int nModelos);
-void salvaOutput( double *input, char *path);
+void salvaOutput( double *input, char *path, int points);
 int iwindow_1 (int *indice, int nModelos);
 double prod_vect (double *input, double *Coeficientes, double bias, int nCoeficientes);
 int iwindow1 (int *indice, int nModelos);
-
+void salvaResampling ( double *input, double *tiempo, char *path, int points);
 
 
 
