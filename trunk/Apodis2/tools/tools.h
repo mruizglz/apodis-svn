@@ -34,6 +34,7 @@ int IndexEvent( double *pBufferin, int n_samples, double Threshold, int type);
 double IntLin (double xi, double yi, double xf, double yf, double in);
 //int  resampling (int index, double resampling, double t0, double *pDataR, signal *wave, int Normalize);
 int  resampling (int index, double resampling, double t0, double *pDataR, signal *wave);
+int  resampling2 (int index, double resampling, int indexR, double t0, double *pDataR, signal *wave);
 double normalize (double Max, double Min, double data);
 int  ReadFloatTxt(char *path, double *buffer);
 double Mean (double *pData, int npoints);
