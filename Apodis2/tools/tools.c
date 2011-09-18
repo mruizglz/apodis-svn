@@ -47,10 +47,12 @@ int IndexEvent( double *pBufferin, int n_samples, double Threshold, int type){
        break;
 
        case 1:
-	 while (*pBufferin < Threshold && i < n_samples){
+	 while (*pBufferin <= Threshold && i < n_samples){
 	   i++;
 	   pBufferin++;
 	 }
+	 if (i>0)
+		 i--;
        break;
 
     }
@@ -187,6 +189,46 @@ else
    n=0;
   return (n);
 }
+
+
+//int resampling2 ( *(t0+i), conf_Sampling,tini,*((pSignal+i)->pM+j) ,(pSignal+i)){
+int  resampling2 (int index, double resampling, int indexR, double t0, double *pDataR, signal *wave){
+
+
+	  int rindex; //index to complete the resampling buffer
+
+	  double time; //resamplig time sample
+	  double paddingvalue; //padding Value, last sample
+	  double intermediate; //Intermediate Buffer for easy code rading
+
+	  //  double t0; //To reuse codefrom previous version
+	  int Normalize; // To reuse code from previous version
+
+	  char txt[255];
+
+
+	  	  // t0= *(wave->pTime+index);
+	  Normalize= (wave->Normalize);
+	  //printf ("Resampling  %s  Index: %d Dato: %f Normaliza: %d  \n",wave->name,index,*(wave->pData+index),Normalize);
+	  rindex= IndexEvent( (wave->pTime+index), wave->nSamples, t0, 1);
+	  rindex= rindex+index;
+      intermediate = IntLin (*(wave->pTime+rindex), *(wave->pData+rindex), *(wave->pTime+rindex+1),  *(wave->pData+rindex+1),t0);
+      if (Normalize){
+    	  *(pDataR+indexR)= normalize (wave->Max, wave->Min, intermediate);
+    	  //	printf(" Res: %f \n",*(pDataR+rindex));
+      }
+
+      else{
+    	  *(pDataR+indexR)= intermediate;
+    	  //	  printf(" Intermediate: %f \n",*(pDataR+rindex));
+      }
+
+	  *(wave->pTimeR+indexR)= t0;
+
+
+
+}
+
 
 
 /**********************************************
