@@ -91,6 +91,7 @@ main(int argc, char *argv[]){
 
   int iWindow=0;
   int ndummy=0;
+  int ndummy2=0;
 
 	FILE *filelog;
 	FILE *fileRes;
@@ -303,7 +304,7 @@ main(int argc, char *argv[]){
 
   *t0= IndexEvent((pSignal)->pData,(pSignal)->nSamples,conf_Threshold,0); //Look for the time when Ipla < Threshold
 
-  *t0= 998; //a Huevo para ajustar con Sebas
+//  *t0= 998; //a Huevo para ajustar con Sebas
    printf("Indice de t0 %d \n",*t0);
    printf("Valor de t0 indice %d valor %f \n",*(t0),*(pSignal->pTime+(*t0)));
 
@@ -340,43 +341,29 @@ main(int argc, char *argv[]){
 
   torigin= *((pSignal)->pTime+*(t0)); //Fix to Signal 1 origin
 
-  for (i=0;i<conf_Nsignals;i++){ //Resampling for raw signals only
-    //       printf (" \nstruct status signal %s : \n",(pSignal+i)->name);
-    //   printf ("maximum: %f minimum: %f Npuntos: %d nsamples: %d \n",(pSignal+i)->Max,(pSignal+i)->Min,(pSignal+i)->Npoints,(pSignal+i)->nSamples);
-    //   printf ("pData: %f pTime: %f pTimeR: %f \n",*((pSignal+i)->pData),*((pSignal+i)->pTime),*((pSignal+i)->pTimeR));
-     tini= torigin; //Fix to Signal 1 origin
+  tini= torigin; //Fix to Signal 1 origin
 
-     for (j=conf_NModels-1;j>=0;j--){
-       // printf ("pM %d : ",(pSignal+i)->pM+j);
-       // printf("****** signal %d time  %f  *******\n",i,*((pSignal+i)->pTime+*(t0+i)));
-       t=resampling ( *(t0+i), conf_Sampling,tini,*((pSignal+i)->pM+j) ,(pSignal+i));
-       tini= *((pSignal+i)->pTimeR+31); //Final time for buffer time resamplig. inizial value next iteration
-       *(t0+i)+=t;
-       //[sizeof(units) - 1]
-/*       txt[0]= NULL;
-       sprintf(txt,"Signal_%d_%d.txt",i,j);
-       salvaOutput (*((pSignal+i)->pM+j),txt,32);
-       txt[0]= NULL;
-       sprintf(txt,"Tiempos_%d_%d.txt",i,j);
-       salvaOutput (((pSignal+i)->pTimeR),txt,32);
-*/
-       //for(t=0;t<32;t++) printf(" valor tiempo %.3f \t",*((pSignal+i)->pTimeR+t));
-       //     printf("**************\n");
-	   if (t==0){
-	     printf("Signal end reach \n");
-         fprintf (fileRes,"%d \t %s \t %.3f \n",shotNumber,"0",*((pSignal)->pTimeR+31));
-	     exit(0);
-	   }
-	  //     printf("\n Cambio senal  %d \n",i);
-	    //   pBuffer=*((pSignal+i)->pM+j);
-        //for(z=0;z<1;z++)
-        // printf("Valor normalizado: %f  \n",*(pBuffer+z));
-	//if(i==2) exit(0);
-     }
-     //   printf("\n");
+  for (j=conf_NModels-1;j>=0;j--){
 
+	  for(z=0;z < conf_Npoints;z++){
+
+		  for (i=0;i<conf_Nsignals;i++){ //Resampling for raw signals only
+			     t=resampling2 ( *(t0+i), conf_Sampling, z, tini,*((pSignal+i)->pM+j) ,(pSignal+i));
+		  }
+		  tini += conf_Sampling;
+
+	  }
+	  for (i=0;i<conf_Nsignals;i++){ //Resampling for raw signals only
+		  txt[0]= NULL;
+		  sprintf(txt,"Resampleada_%s.txt",(pSignal+i)->name);
+
+		  salvaResampling ( *((pSignal+i)->pM+j), (pSignal+i)->pTimeR, txt, (pSignal+i)->Npoints);
+
+	  }
 
   }
+
+
 
 
 
@@ -763,7 +750,10 @@ main(int argc, char *argv[]){
   //printf("Resultado D2: %.10f  D1: %.10f  D0: %.10f \n",D[2],D[1],D[0]);
   // fprintf(filelog,"%.10f \n",Result_Model);
 
- fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][0],ModelParts[1][0],ModelParts[2][0],ModelParts[3][0],ModelParts[4][0],ModelParts[5][0],ModelParts[6][0],ModelParts[7][0],ModelParts[8][0],ModelParts[9][0],ModelParts[10][0],D[2],D[1],D[0],Result_Model);
+  //fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][2],ModelParts[1][2],ModelParts[2][2],ModelParts[3][2],ModelParts[4][2],ModelParts[5][2],ModelParts[6][2],ModelParts[7][2],ModelParts[8][2],ModelParts[9][2],ModelParts[10][2],D[2],D[1],D[0],Result_Model);
+  //fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][1],ModelParts[1][1],ModelParts[2][1],ModelParts[3][1],ModelParts[4][1],ModelParts[5][1],ModelParts[6][1],ModelParts[7][1],ModelParts[8][1],ModelParts[9][1],ModelParts[10][1],D[2],D[1],D[0],Result_Model);
+  fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][0],ModelParts[1][0],ModelParts[2][0],ModelParts[3][0],ModelParts[4][0],ModelParts[5][0],ModelParts[6][0],ModelParts[7][0],ModelParts[8][0],ModelParts[9][0],ModelParts[10][0],D[2],D[1],D[0],Result_Model);
+
 
 
 
@@ -786,34 +776,55 @@ main(int argc, char *argv[]){
 
 
    finish= FALSE;
-k=5;
+k=3;
    do{
 	 ndummy=iwindow1(&iWindow,conf_NModels);
      j=bufferFree(&iWindow,conf_NModels);
-     for (i=0;i<conf_Nsignals;i++){ //Resampling for raw signals only
-       //if (i==0)    printf("tiempos indice t: %d \n", *(t0+i));
-         tini= *((pSignal+i)->pTimeR+31); //the time always is pTimeR
-       //t=resampling ( *(t0+i), conf_Sampling,*((pSignal+ndummy)->pTimeR+31) ,*((pSignal+i)->pM+j) ,(pSignal+i));
-         t=resampling ( *(t0+i), conf_Sampling,tini ,*((pSignal+i)->pM+j) ,(pSignal+i));
-	   *(t0+i)+=t;
 
-/*       txt[0]= NULL;
-       sprintf(txt,"Signal_%d_%d.txt",i,k);
-       salvaOutput (*((pSignal+i)->pM+j),txt,32);
-       txt[0]= NULL;
-       sprintf(txt,"Tiempos_%d_%d.txt",i,k);
-       salvaOutput (((pSignal+i)->pTimeR),txt,32);
-*/
+	  for(z=0;z < conf_Npoints;z++){
 
-      	//       if (i==0) printf("tiempos indice t retorno : %d \n",t);
-	   if (t==0){
-	      printf("\n ***********  Signal end reach No disruption **************\n");
-	      fprintf (fileRes,"%d \t %s \t %.3f \n",shotNumber,"-1",*((pSignal)->pTimeR+31));
-	      finish= TRUE;
-	      break;
-	   }
-    }
+		  for (i=0;i<conf_Nsignals;i++){ //Resampling for raw signals only
+			  //if (i==0)    printf("tiempos indice t: %d \n", *(t0+i));
+			  //tini= *((pSignal+i)->pTimeR+31); //the time always is pTimeR
+			  //t=resampling ( *(t0+i), conf_Sampling,*((pSignal+ndummy)->pTimeR+31) ,*((pSignal+i)->pM+j) ,(pSignal+i));
+			  //t=resampling ( *(t0+i), conf_Sampling,tini ,*((pSignal+i)->pM+j) ,(pSignal+i));
+			 // *(t0+i)+=t;
 
+			  /*       txt[0]= NULL;
+			   sprintf(txt,"Signal_%d_%d.txt",i,k);
+			   salvaOutput (*((pSignal+i)->pM+j),txt,32);
+			   txt[0]= NULL;
+			   sprintf(txt,"Tiempos_%d_%d.txt",i,k);
+			   salvaOutput (((pSignal+i)->pTimeR),txt,32);
+			   */
+			   t=resampling2 ( *(t0+i), conf_Sampling, z, tini,*((pSignal+i)->pM+j) ,(pSignal+i));
+
+
+			  /*
+			  //       if (i==0) printf("tiempos indice t retorno : %d \n",t);
+			  if (t==0){
+				  printf("\n ***********  Signal end reach No disruption **************\n");
+				  fprintf (fileRes,"%d \t %s \t %.3f \n",shotNumber,"-1",*((pSignal)->pTimeR+31));
+				  finish= TRUE;
+				  break;
+			  }
+			  */
+		  }
+		  tini += conf_Sampling;
+
+	  }
+	  printf("%.3f \n",tini);
+	  for (i=0;i<conf_Nsignals;i++){ //Resampling for raw signals only
+		  txt[0]= NULL;
+		  sprintf(txt,"Resampleada_%s.txt",(pSignal+i)->name);
+
+		  salvaResampling ( *((pSignal+i)->pM+j), (pSignal+i)->pTimeR, txt, (pSignal+i)->Npoints);
+
+	  }
+
+	  k++;
+	  if (k>53)
+		  k=105;
 
      //Here the raw signal are reading and ready to be used
 
@@ -979,12 +990,15 @@ k=5;
   // D[2]=  distance (ColumnModel, pModel+ndummy);
   D[2]=  distance (ColumnModel, pModel+2); //El modelo siempre es el mismo que D es decir 2 en este caso
 
+  ndummy2=ndummy;
+
   ndummy= iwindow_1(&ndummy,conf_NModels);
   for (i=0;i<11;i++){
     ColumnModel[i]= ModelParts[i][ndummy];
   }
   // D[1]=  distance (ColumnModel, pModel+ndummy);
   D[1]=  distance (ColumnModel, pModel+1); //El modelo siempre es el mismo que D es decir 1 en este caso
+
 
 
 
@@ -996,8 +1010,13 @@ k=5;
    //   printf("Result_Model: %.5f \n",Result_Model);
    // fprintf(filelog,"%.10f \n",Result_Model);
 
+   //fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][ndummy2],ModelParts[1][ndummy2],ModelParts[2][ndummy2],ModelParts[3][ndummy2],ModelParts[4][ndummy2],ModelParts[5][ndummy2],ModelParts[6][ndummy2],ModelParts[7][ndummy2],ModelParts[8][ndummy2],ModelParts[9][ndummy2],ModelParts[10][ndummy2],D[2],D[1],D[0],Result_Model);
+   //fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][ndummy],ModelParts[1][ndummy],ModelParts[2][ndummy],ModelParts[3][ndummy],ModelParts[4][ndummy],ModelParts[5][ndummy],ModelParts[6][ndummy],ModelParts[7][ndummy],ModelParts[8][ndummy],ModelParts[9][ndummy],ModelParts[10][ndummy],D[2],D[1],D[0],Result_Model);
+   fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][iWindow],ModelParts[1][iWindow],ModelParts[2][iWindow],ModelParts[3][iWindow],ModelParts[4][iWindow],ModelParts[5][iWindow],ModelParts[6][iWindow],ModelParts[7][iWindow],ModelParts[8][iWindow],ModelParts[9][iWindow],ModelParts[10][iWindow],D[2],D[1],D[0],Result_Model);
 
-   fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][0],ModelParts[1][0],ModelParts[2][0],ModelParts[3][0],ModelParts[4][0],ModelParts[5][0],ModelParts[6][0],ModelParts[7][0],ModelParts[8][0],ModelParts[9][0],ModelParts[10][0],D[2],D[1],D[0],Result_Model);
+   printf ("ventana iwindows: %d  ndummy: %d  ndummy2:  %d  \n", iWindow, ndummy, ndummy2);
+
+
 
    if (Result_Model > 0){
      printf("\n ********* Disruption at  t: %f       *********** \n",*((pSignal)->pTimeR+31));
