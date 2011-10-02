@@ -661,7 +661,7 @@ void salvaOutput( double *input, char *path, int points){
 int iwindow_1 (int *indice, int nModelos){
 
 
-  return((*indice - 1) < 0 ? nModelos : *indice -1);
+  return((*indice - 1) < 0 ? nModelos-1 : *indice -1);
 
 
 }
