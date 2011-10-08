@@ -74,6 +74,10 @@ main(int argc, char *argv[]){
 
   double R[5];   //Este hay que pasarlo tambien a dinamico
   double ModelParts[11][3];//Este hay que pasarlo tambien a dinamico
+  double **ModelParts2;
+
+  int NProcSignals;	//Number of processing signals =
+
   double ColumnModel[11];
   double D[3];	//tambien a dinÃ¡mico
 
@@ -527,179 +531,68 @@ main(int argc, char *argv[]){
    //calculamos los valores del medelo de las tres ventanas
    //esto hay que meterlo dentro de la estructira de punteros
 
+   ModelParts2= malloc(sizeof(double * )* (Nsignals*2));
+   if (ModelParts2 == NULL){
+      free(pSignal);
+      printf ("Not space for ModelParts data array \n");
+      exit(0);
+   }
+   for (i=0;i<(Nsignals*2);i++){
+	   *(ModelParts2+i)= malloc(sizeof(double ) * conf_NModels);
+	   if (*(ModelParts2+i) == NULL){
+	      free(pSignal);
+	      printf ("Not space for ModelParts data array \n");
+	      exit(0);
+	   }
+   }
+
+   //(pSignal+i)->pM=  malloc(sizeof(double * )*conf_NModels); //Allocate space for arrays pointers  NO SERIA ESTA?
+
+
 
 //Process Ipla
 
 
-   for (i=0;i<conf_NModels;i++){ //mean ipla
+/*   for (i=0;i<conf_NModels;i++){ //mean ipla
      ModelParts[0][i]= Mean (*((pSignal)->pM+i), conf_Npoints);
+     *(*(ModelParts2)+i)= Mean (*((pSignal)->pM+i), conf_Npoints);
    }
 
-   for (i=0;i<conf_NModels;i++){ //des ipla
-     pBuffer= *((pSignal)->pM+i);
-     //    printf("\n Valores entrada FFT %d  %p %d %f \n",i,pBuffer,conf_Npoints,*(pBuffer));
-     for (t=0;t<conf_Npoints;t++){
-       infft[t][0]=*(pBuffer+t); infft[t][1]=0;
-       //     printf("%f \t %f \t", infft[t][0],outfft[t][1]);
-     }
      salvaOutput (pBuffer,"FFTinIPLA.txt",32);
-     fft(conf_Npoints, infft, outfft);
 
+*/
 
-
-      for (t=0;t<conf_Npoints;t++){
-	//	printf("Real %f \t Imaginaria: %f \n", outfft[t][0], outfft[t][1]);
-      }
-
-      Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
-
-      salvaOutput (resabs,"ResAbsIPLA.txt",32);
-
-
-
-     ModelParts[1][i]= Desv (resabs, conf_Npoints/2);
-
-         printf("\n modelim  %f \n", ModelParts[1][i]);
-
-   }
 
 
   //Process loca
 
-   for (i=0;i<conf_NModels;i++){ //mean loca
-     ModelParts[2][i]= Mean (*((pSignal+1)->pM+i), conf_Npoints);
-   }
+   for(j=0;j<Nsignals*2;j+2){
 
-   for (i=0;i<conf_NModels;i++){ //des loca
-     pBuffer= *((pSignal+1)->pM+i);
-     for (t=0;t<conf_Npoints;t++){
-       infft[t][0]=*(pBuffer+t); infft[t][1]=0;
-     }
+	   for (i=0;i<conf_NModels;i++){ //mean values
+	        //ModelParts[2][i]= Mean (*((pSignal+1)->pM+i), conf_Npoints);
+	        *(*(ModelParts2+j)+i)= Mean (*((pSignal)->pM+i), conf_Npoints);
+	   }
 
-     fft(conf_Npoints, infft, outfft);
 
-     Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
+	   for (i=0;i<conf_NModels;i++){ //des loca
+	        pBuffer= *((pSignal+1)->pM+i);
+	        for (t=0;t<conf_Npoints;t++){
+	          infft[t][0]=*(pBuffer+t); infft[t][1]=0;
+	        }
 
-     ModelParts[3][i]= Desv (resabs, conf_Npoints/2);
+	        fft(conf_Npoints, infft, outfft);
 
-   }
+	        Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
 
-//Process density
+	        //ModelParts[3][i]= Desv (resabs, conf_Npoints/2);
+	        *(*(ModelParts2+(j+1))+i)= Desv (resabs, conf_Npoints/2);
 
-   for (i=0;i<conf_NModels;i++){ //mean density
-     ModelParts[4][i]= Mean (*((pSignal+3)->pM+i), conf_Npoints);
-   }
+	      }
 
-//Process Desv. Energy
 
-   for (i=0;i<conf_NModels;i++){ //mean Energy
-     ModelParts[5][i]= Mean (*((pSignal+4)->pM+i), conf_Npoints);
-   }
-
-   for (i=0;i<conf_NModels;i++){ //des Desv. Energy
-     pBuffer= *((pSignal+4)->pM+i);
-     for (t=0;t<conf_Npoints;t++){
-       infft[t][0]=*(pBuffer+t); infft[t][1]=0;
-     }
-
-     fft(conf_Npoints, infft, outfft);
-
-     Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
-
-     ModelParts[6][i]= Desv (resabs, conf_Npoints/2);
 
    }
 
-
-
-//Process Der. Inductancia
-
-   for (i=0;i<conf_NModels;i++){ //mean der inductacia
-     ModelParts[7][i]= Mean (*((pSignal+7)->pM+i), conf_Npoints);
-   }
-
-
-   for (i=0;i<conf_NModels;i++){ //des der inductacia
-     pBuffer= *((pSignal+7)->pM+i);
-     //printf("\n Valores de la senal 7 (8-1) %d \n",i);
-     for (t=0;t<conf_Npoints;t++){
-       infft[t][0]=*(pBuffer+t); infft[t][1]=0;
-       //       printf("%.8f \t", infft[t][0]);
-     }
-
-     fft(conf_Npoints, infft, outfft);
-
-     Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
-
-     ModelParts[8][i]= Desv (resabs, conf_Npoints/2);
-
-   }
-
-  //Debug
-   /*     pBuffer= *((pSignal+2)->pM+2);
-    salvaOutput( pBuffer, "LOG53.txt");
-     pBuffer= *((pSignal+2)->pM+1);
-    salvaOutput( pBuffer, "LOG52.txt");
-    pBuffer= *((pSignal+2)->pM);
-    salvaOutput( pBuffer, "LOG51.txt");
-
-     pBuffer= *((pSignal+2)->pM+2);
-    salvaOutput( pBuffer, "LOG63.txt");
-     pBuffer= *((pSignal+2)->pM+1);
-    salvaOutput( pBuffer, "LOG62.txt");
-    pBuffer= *((pSignal+2)->pM);
-    salvaOutput( pBuffer, "LOG61.txt");
-
-
-     pBuffer= *((pSignal+7)->pM+2);
-    salvaOutput( pBuffer, "LOG83.txt");
-     pBuffer= *((pSignal+7)->pM+1);
-    salvaOutput( pBuffer, "LOG82.txt");
-     pBuffer= *((pSignal+7)->pM);
-    salvaOutput( pBuffer, "LOG81.txt");
-   */
-
-
-   for (i=0;i<conf_NModels;i++){ //mean quotien
-     ModelParts[9][i]= Mean (*((pSignal+8)->pM+i), conf_Npoints);
-   }
-
-   for (i=0;i<conf_NModels;i++){ //des der inductacia
-     pBuffer= *((pSignal+8)->pM+i);
-     for (t=0;t<conf_Npoints;t++){
-       infft[t][0]=*(pBuffer+t); infft[t][1]=0;
-     }
-     salvaOutput (pBuffer,"FFTinCociente.txt",32);
-     fft(conf_Npoints, infft, outfft);
-
-     Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
-     salvaOutput (pBuffer,"ABSinCociente.txt",32);
-     ModelParts[10][i]= Desv (resabs, conf_Npoints/2);
-
-   }
-
-
-   /*
-   for(j=7;j<8;j++){
-     for (i=0;i<conf_NModels;i++){ //des der inductacia
-       printf("\n Valores signal: %d valor:  %.10f ", j, ModelParts[j][2-i]);
-       fprintf(filelog,"%.10f \n",ModelParts[j][2-i]);
-     }
-   }
-*/
-
-   //  for (i=0;i<conf_NModels;i++){ //des der inductacia
-  //     salvaOutput (ModelParts, "LOG.txt");
-       //       printf("\n Valores signal: %d valor:  %f ", j, ModelParts[j][i]);
-		//}
-
-   //printf("\n");
-
-   //  printf ("Entrada \n ");
-  for (i=0;i<11;i++){
-    ColumnModel[i]= ModelParts[i][0];
-    //     printf (" %.10f \t ",ColumnModel[i]);
-  }
 
   //para probrar distancia
   /* ColumnModel[0]=  0.666;
