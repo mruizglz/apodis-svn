@@ -44,9 +44,9 @@ main(int argc, char *argv[]){
   float *TimeJET; //Para paso intermedio
 
 
-  int *t0;
-  double *Maximums;
-  double *Minimums;
+  int *t0;			//Pointer to init times, cross threshold array 
+  double *Maximums;	//Pointer to maximums array
+  double *Minimums;	//Pointer to minimums array
 
 
   int i,j,t,z,k;  // for loops
@@ -54,9 +54,9 @@ main(int argc, char *argv[]){
   int ndata; //Number of datos of a signal
 
   double **pArray; //pointer to array
-  double *pBuffer; //Pointer too buffer
-  double *pBuffer1; //Pointer too buffer
-  double *pBuffer2; //Pointer too buffer
+  double *pBuffer; //Pointer to buffer
+  double *pBuffer1; //Pointer to buffer
+  double *pBuffer2; //Pointer to buffer
 
   int  *ToNormalize; // pointer to array with actions about normalize proccess
                      //[12]={TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE};
@@ -79,7 +79,9 @@ main(int argc, char *argv[]){
   int NProcSignals;	//Number of processing signals =
 
   double ColumnModel[11];
-  double D[3];	//tambien a dinÃ¡mico
+  //double D[3];	//tambien a dinÃ¡mico
+  double *D;
+
 
   double Result_Model;
   int finish;
@@ -279,12 +281,14 @@ main(int argc, char *argv[]){
 
   // Reading Maximums and Minimums values
 
+  // Check Maximums, Minimum and Normalize sizes
+  
   if((ReadFloatTxt(conf_PathMax, Maximums) != Nsignals) or (ReadFloatTxt(conf_PathMin, Minimums) !=  Nsignals or (ReadNormalizeTxt(conf_PathNormalize, ToNormalize) != Nsignals))){
     printf ("Maximum, Minimus, or Normalize  Files does not match with signal numbers \n");
     exit (0);
   }
 
- for(i=0;i<Nsignals;i++){
+ for(i=0;i<Nsignals;i++){	//Copy Maximums, minimums and normaliza to signaal struct		
    (pSignal+i)->Max= *(Maximums+i);
    (pSignal+i)->Min= *(Minimums+i);
    (pSignal+i)->Normalize= *(ToNormalize+i);
@@ -292,7 +296,7 @@ main(int argc, char *argv[]){
    //  printf("VMax: %.10f  VMin:  %.10f \n",*(Maximums+i),*(Minimums+i));
   }
 
- free(Maximums); //free array values are copied in the struct
+ free(Maximums); //free arrays, values are copied in the struct
  free(Minimums);
  free(ToNormalize);
 
@@ -333,7 +337,7 @@ main(int argc, char *argv[]){
     for(j=0;j<conf_NModels;j++){
       *((pSignal+i)->pM+j)= (double *) malloc(conf_Npoints*sizeof(double));
       if(*((pSignal+i)->pM+j) == NULL ){ //Do so for easy code ready
-	free(pSignal);
+	  free(pSignal);
         printf("\n**** Not available memory for Model windows  %s, \n",(pSignal+i)->name );
         exit(0);
       }
@@ -347,7 +351,7 @@ main(int argc, char *argv[]){
 
   tini= torigin; //Fix to Signal 1 origin
 
-  for (j=conf_NModels-1;j>=0;j--){
+  for (j=conf_NModels-1;j>=0;j--){	//Fill 
 
 	  for(z=0;z < conf_Npoints;z++){
 
@@ -373,6 +377,8 @@ main(int argc, char *argv[]){
 
   //Here the raw signal are reading and ready to be used
 
+/*
+
   //Now start the caculate signals. Signal number 8 (from number 3) the difference signal
   //Signal 9 (from 6 and 7). Signal 6 is adjust to a minimum value of 1000 and then is divided
   //for signal 7.
@@ -393,9 +399,11 @@ main(int argc, char *argv[]){
     salvaOutput (*((pSignal+7)->pM+j),txt,32);
   }
 
+*/
 
 
 
+/*
 
 
   for (j=0;j>=0;j--){                           //genarate M3 timeR and data
@@ -414,11 +422,14 @@ main(int argc, char *argv[]){
     salvaOutput (*((pSignal+7)->pM+j),txt,32);
   }
 
+*/
 
 
   //Signal 8. Done
 
   //Signal 9. difference between signals 6 and 7. The signal is number 8 (9-1)
+
+/*
 
   for (j=conf_NModels-1;j>0;j--){  //two parts loop for use the last loop M3 to generate the timeR
      // printf ("pM %d : ",(pSignal+i)->pM+j);
@@ -449,7 +460,7 @@ main(int argc, char *argv[]){
     salvaOutput (*((pSignal+8)->pM+j),txt,32);
   }
 
-
+*/
 
 
   // PRINTSIGNAL (pSignal);
@@ -575,7 +586,7 @@ main(int argc, char *argv[]){
 
 
 	   for (i=0;i<conf_NModels;i++){ //des loca
-	        pBuffer= *((pSignal+1)->pM+i);
+	        pBuffer= *((pSignal+(j+1))->pM+i);
 	        for (t=0;t<conf_Npoints;t++){
 	          infft[t][0]=*(pBuffer+t); infft[t][1]=0;
 	        }
@@ -594,6 +605,9 @@ main(int argc, char *argv[]){
    }
 
 
+  D= (double *) malloc(sizeof(double)* conf_NModels); //Alocate space for distance vectors
+
+
   //para probrar distancia
   /* ColumnModel[0]=  0.666;
   ColumnModel[1]=  0.00524;
@@ -608,7 +622,8 @@ main(int argc, char *argv[]){
   ColumnModel[10]= 0.00002;*/
 
 
-  D[0]=  distance (ColumnModel, pModel);
+  D+0= distance ((*(ModelParts2)+0), pModel);
+  //D[0]=  distance (ColumnModel, pModel);
   // printf ("Distancia: %.10f \n",D[0]);
 
   // dummy= prod_vect (ColumnModel, *pModel->data, pModel->bias, 11);
@@ -620,13 +635,18 @@ main(int argc, char *argv[]){
   for (i=0;i<11;i++){
     ColumnModel[i]= ModelParts[i][1];
   }
-  D[1]=  distance (ColumnModel, pModel+1);
+
+  D+1= distance ((*(ModelParts2)+1), pModel+1);
+
+  //D[1]=  distance (ColumnModel, pModel+1);
 
   for (i=0;i<11;i++){
     ColumnModel[i]= ModelParts[i][2];
   }
 
-  D[2]=  distance (ColumnModel, pModel+2);
+  D+2= distance ((*(ModelParts2)+2), pModel+2);
+
+  //D[2]=  distance (ColumnModel, pModel+2);
   //  printf ("Distancia: %.10f \n",D[0]);
   //  printf ("Distancia: %.10f \n",D[1]);
   // printf ("Distancia: %.10f \n",D[2]);
@@ -671,8 +691,8 @@ main(int argc, char *argv[]){
    finish= FALSE;
 k=3;
    do{
-	 ndummy=iwindow1(&iWindow,conf_NModels);
-     j=bufferFree(&iWindow,conf_NModels);
+	 ndummy=iwindow1(&iWindow,conf_NModels); //take where to allocate the new buffer window
+       j=bufferFree(&iWindow,conf_NModels);
 
 	  for(z=0;z < conf_Npoints;z++){
 
@@ -721,153 +741,28 @@ k=3;
 
      //Here the raw signal are reading and ready to be used
 
-     //Now start the caculate signals. Signal number 8 (from number 3) the difference signal
-     //Signal 9 (from 6 and 7). Signal 6 is adjust to a minimum value of 1000 and then is divided
-     //for signal 7.
-
-     //Siganl 8. Index=7 (8 - 1)
-     //Make the new signal x[n]=x[n+1]-x[n], the last point is the previous point
-
-     pBuffer= *((pSignal+7)->pM+j);  //Used for easy code reading
-     pBuffer1= *((pSignal+2)->pM+j);
-
-     for (i=0;i<conf_Npoints-1;i++){
-       *(pBuffer+i)= normalize ((pSignal+7)->Max, (pSignal+7)->Min, *(pBuffer1+i+1)-*(pBuffer1+i));
-       *((pSignal+7)->pTimeR+i)= *((pSignal+2)->pTimeR+i);
-     }
-     *(pBuffer+i)= *(pBuffer+i-1);
-     *((pSignal+7)->pTimeR+i)= *((pSignal+7)->pTimeR+i-1);
-
-
-
-     //Signal 8. Done
-
-     //Signal 9. difference between signals 6 and 7. The signal is number 8 (9-1)
-
-     // printf ("pM %d : ",(pSignal+i)->pM+j);
-     pBuffer= *((pSignal+8)->pM+j);  //Used for easy code reading
-     pBuffer1= *((pSignal+5)->pM+j);
-     pBuffer2= *((pSignal+6)->pM+j);
-
-     for (i=0;i<conf_Npoints;i++){
-       *(pBuffer+i)= normalize ((pSignal+8)->Max, (pSignal+8)->Min, (*(pBuffer2+i) < 1 ? 1 :*(pBuffer2+i)) / (*(pBuffer1+i) < 1000 ? 1000 :*(pBuffer1+i))); //Ojo 1000  y 1 a configuracion
-       *((pSignal+8)->pTimeR+i)= *((pSignal+5)->pTimeR+i);
-     }
-
-
-/*		   txt[0]= NULL;
-		   sprintf(txt,"Signal_8_%d.txt",k,32);
-		   salvaOutput (*((pSignal+8)->pM+j),txt,32);
-		   txt[0]= NULL;
-		   sprintf(txt,"Tiempos_8_%d.txt",k,32);
-		   salvaOutput (((pSignal+8)->pTimeR),txt,32);
-		   k++;
-*/
-
-
-
    //calculamos los valores del medelo de las tres ventanas
    //esto hay que meterlo dentro de la estructira de punteros
 
 
-   //Process Ipla
+  for(z=0;z<Nsignals*2;z+2){
 
-   ModelParts[0][j]= Mean (*((pSignal)->pM+j), conf_Npoints);
+     	*(*(ModelParts2+z)+j)= Mean (*((pSignal)->pM+j), conf_Npoints);
 
-   //des ipla
-   pBuffer= *((pSignal)->pM+j);
-   for (t=0;t<conf_Npoints;t++){
-     infft[t][0]=*(pBuffer+t); infft[t][1]=0;
+   	//des ipla
+   	pBuffer= *((pSignal+(z+1))->pM+j);
+   	for (t=0;t<conf_Npoints;t++){
+     		infft[t][0]=*(pBuffer+t); infft[t][1]=0;
+   	}
+
+   	fft(conf_Npoints, infft, outfft);
+
+   	Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
+
+      //ModelParts[3][i]= Desv (resabs, conf_Npoints/2);
+      *(*(ModelParts2+(z+1))+j)= Desv (resabs, conf_Npoints/2);
+
    }
-
-   fft(conf_Npoints, infft, outfft);
-
-   Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
-
-   ModelParts[1][j]= Desv (resabs, conf_Npoints/2);
-
-//Process loca
-
-
-   ModelParts[2][j]= Mean (*((pSignal+1)->pM+j), conf_Npoints);
-
- //des loca
-   pBuffer= *((pSignal+1)->pM+j);
-   for (t=0;t<conf_Npoints;t++){
-     infft[t][0]=*(pBuffer+t); infft[t][1]=0;
-   }
-
-   fft(conf_Npoints, infft, outfft);
-
-   Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
-
-   ModelParts[3][j]= Desv (resabs, conf_Npoints/2);
-
-
-
-//Process density
-
- //mean density
-   ModelParts[4][j]= Mean (*((pSignal+3)->pM+j), conf_Npoints);
-
-//Process Desv. Energy
-
-   ModelParts[5][j]= Mean (*((pSignal+4)->pM+j), conf_Npoints);
-
- //des Desv. Energy
-   pBuffer= *((pSignal+4)->pM+j);
-   for (t=0;t<conf_Npoints;t++){
-     infft[t][0]=*(pBuffer+t); infft[t][1]=0;
-   }
-
-   fft(conf_Npoints, infft, outfft);
-
-   Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
-
-   ModelParts[6][j]= Desv (resabs, conf_Npoints/2);
-
-
-//Process Der. Inductancia
-
-   ModelParts[7][j]= Mean (*((pSignal+7)->pM+j), conf_Npoints);
-
-//des der inductacia
-   pBuffer= *((pSignal+7)->pM+j);
-   for (t=0;t<conf_Npoints;t++){
-     infft[t][0]=*(pBuffer+t); infft[t][1]=0;
-   }
-
-   fft(conf_Npoints, infft, outfft);
-
-   Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
-
-   ModelParts[8][j]= Desv (resabs, conf_Npoints/2);
-
-
-
-
-//Process Cociente
-
- //mean quotien
-   ModelParts[9][j]= Mean (*((pSignal+8)->pM+j), conf_Npoints);
-
-
- //des der inductacia
-   pBuffer= *((pSignal+8)->pM+j);
-   for (t=0;t<conf_Npoints;t++){
-     infft[t][0]=*(pBuffer+t); infft[t][1]=0;
-   }
-
-     fft(conf_Npoints, infft, outfft);
-
-     Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
-
-     ModelParts[10][j]= Desv (resabs, conf_Npoints/2);
-
-
-
-     //  printf("\n Valores signal: %d valor:  %.10f ", 0, ModelParts[0][iWindow]);
-     //  fprintf(filelog,"%.10f \n",ModelParts[8][iWindow]);
 
 
   for (i=0;i<11;i++){
