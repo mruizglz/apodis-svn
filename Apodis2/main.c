@@ -23,6 +23,8 @@ JET signal reading method provide by Jesus Vega (CIEMAT)
 
 void PRINTSIGNAL( signal *entrada);
 
+#define DEBUGLEVEL1	1
+#define DEBUGLEVEL2	2
 
 main(int argc, char *argv[]){
 
@@ -44,7 +46,7 @@ main(int argc, char *argv[]){
   float *TimeJET; //Para paso intermedio
 
 
-  int *t0;			//Pointer to init times, cross threshold array 
+  int *t0;			//Pointer to init times, cross threshold array
   double *Maximums;	//Pointer to maximums array
   double *Minimums;	//Pointer to minimums array
 
@@ -72,14 +74,17 @@ main(int argc, char *argv[]){
 
   int **rowptr;
 
+  int Ncoefficients;
+
   double R[5];   //Este hay que pasarlo tambien a dinamico
   double ModelParts[11][3];//Este hay que pasarlo tambien a dinamico
   double **ModelParts2;
 
   int NProcSignals;	//Number of processing signals =
 
-  double ColumnModel[11];
+  //double ColumnModel[11];
   //double D[3];	//tambien a dinÃ¡mico
+  double *ColumnModel;
   double *D;
 
 
@@ -102,6 +107,8 @@ main(int argc, char *argv[]){
 	FILE *filelog;
 	FILE *fileRes;
 
+  double finaltime;
+
 
   /* Test of input parameters */
   if(argc != 4)
@@ -123,18 +130,19 @@ main(int argc, char *argv[]){
 
   read_config_files();
 
-  printf ("Threshold %f \n",conf_Threshold);
-  printf ("Sampling %f \n",conf_Sampling);
-  printf ("Points  %d \n",conf_Npoints);
-  printf ("Signals  %d \n",conf_Nsignals);
-  printf ("Signal to calculate %d \n",conf_NcalculateSignals);
-  printf ("NModels  %d \n",conf_NModels);
-  printf ("Maximum %s \n",conf_PathMax);
-  printf ("Minimum %s \n",conf_PathMin);
-  printf ("path Model %s \n",conf_PathModel);
-  printf ("path r %s \n",conf_PathR);
-  printf ("path Normalize  %s \n",conf_PathNormalize);
-
+  #ifdef DEBUGLEVEL1
+	  printf ("Threshold %f \n",conf_Threshold);
+	  printf ("Sampling %f \n",conf_Sampling);
+	  printf ("Points  %d \n",conf_Npoints);
+	  printf ("Signals  %d \n",conf_Nsignals);
+	  printf ("Signal to calculate %d \n",conf_NcalculateSignals);
+	  printf ("NModels  %d \n",conf_NModels);
+	  printf ("Maximum %s \n",conf_PathMax);
+	  printf ("Minimum %s \n",conf_PathMin);
+	  printf ("path Model %s \n",conf_PathModel);
+	  printf ("path r %s \n",conf_PathR);
+	  printf ("path Normalize  %s \n",conf_PathNormalize);
+  #endif
 
   Nsignals= conf_Nsignals + conf_NcalculateSignals; // Total number of signal to handle
 
@@ -236,16 +244,18 @@ main(int argc, char *argv[]){
 
        }
 
+		#ifdef DEBUGLEVEL1
+			txt[0]= NULL;
+			sprintf(txt,"Original_%d.txt",i);
 
-    	 txt[0]= NULL;
-      	 sprintf(txt,"Original_%d.txt",i);
+
  /*     	 salvaOutput (((pSignal+i)->pData),txt,ndata);
       	 txt[0]= NULL;
       	 sprintf(txt,"O_Tiempos_%d.txt",i);
       	 salvaOutput (((pSignal+i)->pTime),txt,ndata);*/
 
-      	  salvaResampling ( ((pSignal+i)->pData), ((pSignal+i)->pTime), txt, ndata);
-
+			salvaResampling ( ((pSignal+i)->pData), ((pSignal+i)->pTime), txt, ndata);
+		#endif
 
 
     }
@@ -263,7 +273,11 @@ main(int argc, char *argv[]){
     }
   }
 
+
   //At this point the signal have been read form the JET BBDD
+
+
+  finaltime= *(pSignal->pTime+((pSignal->nSamples)-5)); //final time for Ipla minus 5 samples for security
 
   /*  for (i=1143;i<1155;i++){
     printf ("Signal t: %f valor %f \n",*((pSignal+0)->pTime+i),*((pSignal+0)->pData+i));
@@ -282,13 +296,13 @@ main(int argc, char *argv[]){
   // Reading Maximums and Minimums values
 
   // Check Maximums, Minimum and Normalize sizes
-  
+
   if((ReadFloatTxt(conf_PathMax, Maximums) != Nsignals) or (ReadFloatTxt(conf_PathMin, Minimums) !=  Nsignals or (ReadNormalizeTxt(conf_PathNormalize, ToNormalize) != Nsignals))){
     printf ("Maximum, Minimus, or Normalize  Files does not match with signal numbers \n");
     exit (0);
   }
 
- for(i=0;i<Nsignals;i++){	//Copy Maximums, minimums and normaliza to signaal struct		
+ for(i=0;i<Nsignals;i++){	//Copy Maximums, minimums and normaliza to signaal struct
    (pSignal+i)->Max= *(Maximums+i);
    (pSignal+i)->Min= *(Minimums+i);
    (pSignal+i)->Normalize= *(ToNormalize+i);
@@ -312,8 +326,8 @@ main(int argc, char *argv[]){
 
   *t0= IndexEvent((pSignal)->pData,(pSignal)->nSamples,conf_Threshold,0); //Look for the time when Ipla < Threshold
 
-//  *t0= 998; //a Huevo para ajustar con Sebas
-   printf("Indice de t0 %d \n",*t0);
+  //*t0= 1144; //a Huevo para ajustar con Sebas
+   //printf("Indice de t0 %d \n",*t0);
    printf("Valor de t0 indice %d valor %f \n",*(t0),*(pSignal->pTime+(*t0)));
 
 
@@ -321,11 +335,11 @@ main(int argc, char *argv[]){
 
   for (i=1;i < conf_Nsignals;i++){
     *(t0+i)=  IndexEvent( (pSignal+i)->pTime,(pSignal+i)->nSamples,*((pSignal)->pTime+(*t0)),1)-1;
-     printf("Valor de t0 indice %d valor %f \n",*(t0+i),*((pSignal+i)->pTime+(*(t0+i))) );
+     //printf("Valor de t0 indice %d valor %f \n",*(t0+i),*((pSignal+i)->pTime+(*(t0+i))) );
   }
 
   //make pointer array and allocate memory for memory windows in models
-  printf("Size del double: %d \n",sizeof(double));
+  //printf("Size del double: %d \n",sizeof(double));
   for (i=0;i<Nsignals;i++){ //Allocate array's pointer and pointer to resamplig time
     (pSignal+i)->pM=  malloc(sizeof(double )*conf_NModels); //Allocate space for arrays pointers
     //(pSignal+i)->pM=  malloc(sizeof(double * )*conf_NModels); //Allocate space for arrays pointers  NO SERIA ESTA?
@@ -350,8 +364,9 @@ main(int argc, char *argv[]){
   torigin= *((pSignal)->pTime+*(t0)); //Fix to Signal 1 origin
 
   tini= torigin; //Fix to Signal 1 origin
+  //tini= 42.330061; //Fix to Signal 1 origin
 
-  for (j=conf_NModels-1;j>=0;j--){	//Fill 
+  for (j=conf_NModels-1;j>=0;j--){	//Fill
 
 	  for(z=0;z < conf_Npoints;z++){
 
@@ -362,11 +377,14 @@ main(int argc, char *argv[]){
 
 	  }
 	  for (i=0;i<conf_Nsignals;i++){ //Resampling for raw signals only
-		  txt[0]= NULL;
-		  sprintf(txt,"Resampleada_%s.txt",(pSignal+i)->name);
 
-		  salvaResampling ( *((pSignal+i)->pM+j), (pSignal+i)->pTimeR, txt, (pSignal+i)->Npoints);
 
+		  #ifdef DEBUGLEVEL1
+			  txt[0]= NULL;
+			  sprintf(txt,"Resampleada_%s.txt",(pSignal+i)->name);
+
+			  salvaResampling ( *((pSignal+i)->pM+j), (pSignal+i)->pTimeR, txt, (pSignal+i)->Npoints);
+          #endif
 	  }
 
   }
@@ -377,96 +395,11 @@ main(int argc, char *argv[]){
 
   //Here the raw signal are reading and ready to be used
 
-/*
 
-  //Now start the caculate signals. Signal number 8 (from number 3) the difference signal
-  //Signal 9 (from 6 and 7). Signal 6 is adjust to a minimum value of 1000 and then is divided
-  //for signal 7.
-
-  //Siganl 8. Index=7 (8 - 1)
-  //Make the new signal x[n]=x[n+1]-x[n], the last point is the previous point
-
-  for (j=conf_NModels-1;j>0;j--){  //two parts loop for use the last loop M3 to generate the timeR
-     // printf ("pM %d : ",(pSignal+i)->pM+j);
-    pBuffer= *((pSignal+7)->pM+j);  //Used for easy code reading
-    pBuffer1= *((pSignal+2)->pM+j);
-    for (i=0;i<conf_Npoints-1;i++){
-      *(pBuffer+i)= normalize ((pSignal+7)->Max, (pSignal+7)->Min, *(pBuffer1+i+1)-*(pBuffer1+i));
-    }
-    *(pBuffer+i)= *(pBuffer+i-1);
-    txt[0]= NULL;
-    sprintf(txt,"Signal_%d_%d.txt",7,j);
-    salvaOutput (*((pSignal+7)->pM+j),txt,32);
-  }
-
-*/
-
-
-
-/*
-
-
-  for (j=0;j>=0;j--){                           //genarate M3 timeR and data
-     // printf ("pM %d : ",(pSignal+i)->pM+j);
-    pBuffer= *((pSignal+7)->pM+j);  //Used for easy code reading
-    pBuffer1= *((pSignal+2)->pM+j);
-
-    for (i=0;i<conf_Npoints-1;i++){
-      *(pBuffer+i)= normalize ((pSignal+7)->Max, (pSignal+7)->Min, *(pBuffer1+i+1)-*(pBuffer1+i));
-      *((pSignal+7)->pTimeR+i)= *((pSignal+2)->pTimeR+i);
-    }
-    *(pBuffer+i)= *(pBuffer+i-1);
-    *((pSignal+7)->pTimeR+i)= *((pSignal+7)->pTimeR+i-1);
-    txt[0]= NULL;
-    sprintf(txt,"Signal_%d_%d.txt",7,j);
-    salvaOutput (*((pSignal+7)->pM+j),txt,32);
-  }
-
-*/
-
-
-  //Signal 8. Done
-
-  //Signal 9. difference between signals 6 and 7. The signal is number 8 (9-1)
-
-/*
-
-  for (j=conf_NModels-1;j>0;j--){  //two parts loop for use the last loop M3 to generate the timeR
-     // printf ("pM %d : ",(pSignal+i)->pM+j);
-    pBuffer= *((pSignal+8)->pM+j);  //Used for easy code reading
-    pBuffer1= *((pSignal+5)->pM+j);
-    pBuffer2= *((pSignal+6)->pM+j);
-    for (i=0;i<conf_Npoints;i++){
-      *(pBuffer+i)= normalize ((pSignal+8)->Max, (pSignal+8)->Min, (*(pBuffer2+i) < 1 ? 1 :*(pBuffer2+i)) / (*(pBuffer1+i) < 1000 ? 1000 :*(pBuffer1+i))); //Ojo 1000  y 1 a configuracion
-    }
-    txt[0]= NULL;
-    sprintf(txt,"Signal_%d_%d.txt",8,j);
-    salvaOutput (*((pSignal+8)->pM+j),txt,32);
-  }
-
-
-  for (j=0;j>=0;j--){                           //genarate M3 timeR and data
-     // printf ("pM %d : ",(pSignal+i)->pM+j);
-    pBuffer= *((pSignal+8)->pM+j);  //Used for easy code reading
-    pBuffer1= *((pSignal+5)->pM+j);
-    pBuffer2= *((pSignal+6)->pM+j);
-
-    for (i=0;i<conf_Npoints;i++){
-      *(pBuffer+i)= normalize ((pSignal+8)->Max, (pSignal+8)->Min, (*(pBuffer2+i) < 1 ? 1 :*(pBuffer2+i)) / (*(pBuffer1+i) < 1000 ? 1000 :*(pBuffer1+i))); //Ojo 1000  y 1 a configuracion
-      *((pSignal+8)->pTimeR+i)= *((pSignal+5)->pTimeR+i);
-    }
-    txt[0]= NULL;
-    sprintf(txt,"Signal_%d_%d.txt",8,j);
-    salvaOutput (*((pSignal+8)->pM+j),txt,32);
-  }
-
-*/
 
 
   // PRINTSIGNAL (pSignal);
   //  PRINTSIGNAL (pSignal+7);
-
-
 
 
   //Reading Model Information
@@ -491,7 +424,10 @@ main(int argc, char *argv[]){
 
    for (i=0;i<conf_NModels;i++){ //Allocate array data value for model
      N_vectors(*(PathMx+i),&(pModel+i)->nvectors , &(pModel+i)->coef_vector);
-     printf("Tamanos Modelo: %d vectores: %d coeficientes: %d \n",i,(pModel+i)->nvectors , (pModel+i)->coef_vector);
+
+	 #ifdef DEBUGLEVEL1
+		 printf("Tamanos Modelo: %d vectores: %d coeficientes: %d \n",i,(pModel+i)->nvectors , (pModel+i)->coef_vector);
+	 #endif
 
      (pModel+i)->alfa = malloc(sizeof(double )*(pModel+i)->nvectors); //Allocate space for arrays
      if (Mdummy == NULL){
@@ -511,9 +447,9 @@ main(int argc, char *argv[]){
      for (j=0;j<(pModel+i)->nvectors;j++){
        Mdummy[j]= malloc(sizeof(double)*(pModel+i)->coef_vector); //Allocate space for arrays
        if (Mdummy[j] == NULL){
-	 free(pSignal);
-	 printf ("Not space for Mmodel data array \n");
-	 exit(0);
+    	   free(pSignal);
+    	   printf ("Not space for Mmodel data array \n");
+    	   exit(0);
        }
 
      }
@@ -542,13 +478,15 @@ main(int argc, char *argv[]){
    //calculamos los valores del medelo de las tres ventanas
    //esto hay que meterlo dentro de la estructira de punteros
 
-   ModelParts2= malloc(sizeof(double * )* (Nsignals*2));
+   Ncoefficients= (pModel)->coef_vector; //Easy code reading. Model is regular so first pModel is used
+
+   ModelParts2= malloc(sizeof(double * )* Ncoefficients); //Allocate space with coefficients size and # models
    if (ModelParts2 == NULL){
       free(pSignal);
       printf ("Not space for ModelParts data array \n");
       exit(0);
    }
-   for (i=0;i<(Nsignals*2);i++){
+   for (i=0;i<Ncoefficients;i++){
 	   *(ModelParts2+i)= malloc(sizeof(double ) * conf_NModels);
 	   if (*(ModelParts2+i) == NULL){
 	      free(pSignal);
@@ -557,36 +495,15 @@ main(int argc, char *argv[]){
 	   }
    }
 
-   //(pSignal+i)->pM=  malloc(sizeof(double * )*conf_NModels); //Allocate space for arrays pointers  NO SERIA ESTA?
-
-
-
-//Process Ipla
-
-
-/*   for (i=0;i<conf_NModels;i++){ //mean ipla
-     ModelParts[0][i]= Mean (*((pSignal)->pM+i), conf_Npoints);
-     *(*(ModelParts2)+i)= Mean (*((pSignal)->pM+i), conf_Npoints);
-   }
-
-     salvaOutput (pBuffer,"FFTinIPLA.txt",32);
-
-*/
-
-
-
-  //Process loca
-
-   for(j=0;j<Nsignals*2;j+2){
+   for(j=0;j<Nsignals;j++){
 
 	   for (i=0;i<conf_NModels;i++){ //mean values
-	        //ModelParts[2][i]= Mean (*((pSignal+1)->pM+i), conf_Npoints);
-	        *(*(ModelParts2+j)+i)= Mean (*((pSignal)->pM+i), conf_Npoints);
+	        *(*(ModelParts2+(j*2))+i)= Mean (*((pSignal+j)->pM+i), conf_Npoints);
 	   }
 
 
-	   for (i=0;i<conf_NModels;i++){ //des loca
-	        pBuffer= *((pSignal+(j+1))->pM+i);
+	   for (i=0;i<conf_NModels;i++){ //FFT desv.
+	        pBuffer= *((pSignal+j)->pM+i);
 	        for (t=0;t<conf_Npoints;t++){
 	          infft[t][0]=*(pBuffer+t); infft[t][1]=0;
 	        }
@@ -595,8 +512,7 @@ main(int argc, char *argv[]){
 
 	        Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
 
-	        //ModelParts[3][i]= Desv (resabs, conf_Npoints/2);
-	        *(*(ModelParts2+(j+1))+i)= Desv (resabs, conf_Npoints/2);
+			*(*(ModelParts2+((j*2)+1))+i)= Desv (resabs, conf_Npoints/2);
 
 	      }
 
@@ -605,7 +521,8 @@ main(int argc, char *argv[]){
    }
 
 
-  D= (double *) malloc(sizeof(double)* conf_NModels); //Alocate space for distance vectors
+  D= (double *) malloc(sizeof(double)* conf_NModels); //Allocate space for distance vectors
+  ColumnModel= (double *) malloc(sizeof(double)* Ncoefficients); //Allocate space for auxiliary distance vectors
 
 
   //para probrar distancia
@@ -621,8 +538,12 @@ main(int argc, char *argv[]){
   ColumnModel[9]=  0;
   ColumnModel[10]= 0.00002;*/
 
+  for (i=0;i<Ncoefficients;i++){
+    *(ColumnModel+i)= *(*(ModelParts2+i)+0);
+  }
 
-  D+0= distance ((*(ModelParts2)+0), pModel);
+
+ *(D+0)= distance (ColumnModel, pModel);
   //D[0]=  distance (ColumnModel, pModel);
   // printf ("Distancia: %.10f \n",D[0]);
 
@@ -632,19 +553,20 @@ main(int argc, char *argv[]){
 
 
 
-  for (i=0;i<11;i++){
-    ColumnModel[i]= ModelParts[i][1];
-  }
+ for (i=0;i<Ncoefficients;i++){
+	 *(ColumnModel+i)= *(*(ModelParts2+i)+1);
+ }
 
-  D+1= distance ((*(ModelParts2)+1), pModel+1);
+ *(D+1)= distance (ColumnModel, pModel+1);
 
   //D[1]=  distance (ColumnModel, pModel+1);
 
-  for (i=0;i<11;i++){
-    ColumnModel[i]= ModelParts[i][2];
-  }
+ for (i=0;i<Ncoefficients;i++){
+	 *(ColumnModel+i)= *(*(ModelParts2+i)+2);
+ }
 
-  D+2= distance ((*(ModelParts2)+2), pModel+2);
+
+  *(D+2)= distance (ColumnModel, pModel+2);
 
   //D[2]=  distance (ColumnModel, pModel+2);
   //  printf ("Distancia: %.10f \n",D[0]);
@@ -652,9 +574,9 @@ main(int argc, char *argv[]){
   // printf ("Distancia: %.10f \n",D[2]);
 
   //  printf("tR: %f \t %f  \t  %f  \t %f \n",*((pSignal)->pTimeR+31),*((pSignal+2)->pTimeR+31),*((pSignal+3)->pTimeR+31),*((pSignal+7)->pTimeR+31));
-
-  fprintf(filelog,"tiempo \t S1 \t\t S2 \t S3 \t S4 \t\t S5 \t\t S6 \t S7 \t\t S8 \tS9 \t\t S10 \t S11 \t D3 \t   D2 \t    D1 \t      R\n");
-
+  //fprintf(filelog,"tiempo \t S1 \t S2 \t S3 \t S4 \t S5 \t S6 \t S7 \t S8 \t S9 \t S10 \t S11 \t S12 \t S13 \t S14 \t D3 \t D2 \t D1 \t R\n");
+  //fprintf(filelog,"tiempo \t S1 \t\t S2 \t S3 \t\t S4 \t\t S5 \t\t S6 \t S7 \t\t S8 \tS9 \t\t S10 \t S11 \t S12 \t S13 \t S14 \t D3 \t   D2 \t    D1 \t      R\n");
+  fprintf(filelog,"tiempo \t S1          S2          S3          S4         S5          S6         S7         S8         S9         S10       S11       S12        S13      S14         D3         D2         D1        R\n");
 
   // printf ("\n Reading distance \n");
   //  fprintf(filelog,"vector D: %.10f \t %.10f \t %.10f \n",D[2],D[1],D[0]);
@@ -665,10 +587,9 @@ main(int argc, char *argv[]){
 
   //fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][2],ModelParts[1][2],ModelParts[2][2],ModelParts[3][2],ModelParts[4][2],ModelParts[5][2],ModelParts[6][2],ModelParts[7][2],ModelParts[8][2],ModelParts[9][2],ModelParts[10][2],D[2],D[1],D[0],Result_Model);
   //fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][1],ModelParts[1][1],ModelParts[2][1],ModelParts[3][1],ModelParts[4][1],ModelParts[5][1],ModelParts[6][1],ModelParts[7][1],ModelParts[8][1],ModelParts[9][1],ModelParts[10][1],D[2],D[1],D[0],Result_Model);
-  fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][0],ModelParts[1][0],ModelParts[2][0],ModelParts[3][0],ModelParts[4][0],ModelParts[5][0],ModelParts[6][0],ModelParts[7][0],ModelParts[8][0],ModelParts[9][0],ModelParts[10][0],D[2],D[1],D[0],Result_Model);
+  //fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f  %.7f %.7f %.7f  %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),*(*(ModelParts2+0)+0),*(*(ModelParts2+1)+0),*(*(ModelParts2+2)+0),*(*(ModelParts2+3)+0),*(*(ModelParts2+4)+0),*(*(ModelParts2+5)+0),*(*(ModelParts2+6)+0),*(*(ModelParts2+7)+0),*(*(ModelParts2+8)+0),*(*(ModelParts2+9)+0),*(*(ModelParts2+10)+0),*(*(ModelParts2+11)+0),*(*(ModelParts2+12)+0),*(*(ModelParts2+13)+0),D[2],D[1],D[0],Result_Model);
 
-
-
+    fprintf(filelog,"%.3f %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f\n",*((pSignal)->pTimeR+31),*(*(ModelParts2+0)+0),*(*(ModelParts2+1)+0),*(*(ModelParts2+2)+0),*(*(ModelParts2+3)+0),*(*(ModelParts2+4)+0),*(*(ModelParts2+5)+0),*(*(ModelParts2+6)+0),*(*(ModelParts2+7)+0),*(*(ModelParts2+8)+0),*(*(ModelParts2+9)+0),*(*(ModelParts2+10)+0),*(*(ModelParts2+11)+0),*(*(ModelParts2+12)+0),*(*(ModelParts2+13)+0),D[2],D[1],D[0],Result_Model);
 
 //Evaluar result si es activo escribir alarma y exit
 // si no bucle
@@ -689,7 +610,7 @@ main(int argc, char *argv[]){
 
 
    finish= FALSE;
-k=3;
+   k=3;
    do{
 	 ndummy=iwindow1(&iWindow,conf_NModels); //take where to allocate the new buffer window
        j=bufferFree(&iWindow,conf_NModels);
@@ -726,12 +647,17 @@ k=3;
 		  tini += conf_Sampling;
 
 	  }
-	  printf("%.3f \n",tini);
+	 // printf("%.3f \n",tini);
+
 	  for (i=0;i<conf_Nsignals;i++){ //Resampling for raw signals only
 		  txt[0]= NULL;
-		  sprintf(txt,"Resampleada_%s.txt",(pSignal+i)->name);
 
-		  salvaResampling ( *((pSignal+i)->pM+j), (pSignal+i)->pTimeR, txt, (pSignal+i)->Npoints);
+		  #ifdef DEBUGLEVEL1
+			  sprintf(txt,"Resampleada_%s.txt",(pSignal+i)->name);
+
+			  salvaResampling ( *((pSignal+i)->pM+j), (pSignal+i)->pTimeR, txt, (pSignal+i)->Npoints);
+		  #endif
+
 
 	  }
 
@@ -745,12 +671,12 @@ k=3;
    //esto hay que meterlo dentro de la estructira de punteros
 
 
-  for(z=0;z<Nsignals*2;z+2){
+  for(z=0;z<Nsignals;z++){
 
-     	*(*(ModelParts2+z)+j)= Mean (*((pSignal)->pM+j), conf_Npoints);
+     	*(*(ModelParts2+(z*2))+j)= Mean (*((pSignal+z)->pM+j), conf_Npoints);
 
    	//des ipla
-   	pBuffer= *((pSignal+(z+1))->pM+j);
+   	pBuffer= *((pSignal+z)->pM+j);
    	for (t=0;t<conf_Npoints;t++){
      		infft[t][0]=*(pBuffer+t); infft[t][1]=0;
    	}
@@ -760,56 +686,82 @@ k=3;
    	Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
 
       //ModelParts[3][i]= Desv (resabs, conf_Npoints/2);
-      *(*(ModelParts2+(z+1))+j)= Desv (resabs, conf_Npoints/2);
+      *(*(ModelParts2+((z*2)+1))+j)= Desv (resabs, conf_Npoints/2);
 
    }
 
 
-  for (i=0;i<11;i++){
-    ColumnModel[i]= ModelParts[i][iWindow];
+  for (i=0;i<Ncoefficients;i++){
+	  *(ColumnModel+i)= *(*(ModelParts2+i)+iWindow);
   }
+
+
   //  D[0]=  distance (ColumnModel, pModel+iWindow);
-  D[0]=  distance (ColumnModel, pModel); //El modelo siempre es el mismo que D es decir 0 en este caso
+  //D[0]=  distance (ColumnModel, pModel); //El modelo siempre es el mismo que D es decir 0 en este caso
+  *(D+0)= distance (ColumnModel, pModel);
 
   ndummy=iwindow_1(&iWindow,conf_NModels);
-  for (i=0;i<11;i++){
-    ColumnModel[i]= ModelParts[i][ndummy];
+
+  for (i=0;i<Ncoefficients;i++){
+	  *(ColumnModel+i)= *(*(ModelParts2+i)+ndummy);
   }
+
+
+  //for (i=0;i<11;i++){
+  //  ColumnModel[i]= ModelParts[i][ndummy];
+  //}
+
   // D[2]=  distance (ColumnModel, pModel+ndummy);
-  D[2]=  distance (ColumnModel, pModel+2); //El modelo siempre es el mismo que D es decir 2 en este caso
+  //D[2]=  distance (ColumnModel, pModel+2); //El modelo siempre es el mismo que D es decir 2 en este caso
+  *(D+2)= distance (ColumnModel, pModel+2);
 
   ndummy2=ndummy;
 
   ndummy= iwindow_1(&ndummy,conf_NModels);
-  for (i=0;i<11;i++){
-    ColumnModel[i]= ModelParts[i][ndummy];
-  }
-  // D[1]=  distance (ColumnModel, pModel+ndummy);
-  D[1]=  distance (ColumnModel, pModel+1); //El modelo siempre es el mismo que D es decir 1 en este caso
 
+  for (i=0;i<Ncoefficients;i++){
+	  *(ColumnModel+i)= *(*(ModelParts2+i)+ndummy);
+  }
+
+//  for (i=0;i<11;i++){
+//    ColumnModel[i]= ModelParts[i][ndummy];
+//  }
+  // D[1]=  distance (ColumnModel, pModel+ndummy);
+  //D[1]=  distance (ColumnModel, pModel+1); //El modelo siempre es el mismo que D es decir 1 en este caso
+  *(D+1)= distance (ColumnModel, pModel+1);
 
 
 
 
   //  fprintf(filelog,"vector D: %.10f \t %.10f \t %.10f \n",D[2],D[1],D[0]);
 
-   Result_Model= (double) ((D[2]*R[2] + D[1]*R[3] + D[0]*R[4] +R[1])/R[0]);
-   //   Result_Model= D[2]*R[3] + D[1]*R[2] + D[0]*R[1] +R[0];
-   //   printf("Result_Model: %.5f \n",Result_Model);
-   // fprintf(filelog,"%.10f \n",Result_Model);
+   //Result_Model= (double) ((D[2]*R[2] + D[1]*R[3] + D[0]*R[4] +R[1])/R[0]);//ok
+   Result_Model= (double) ((*(D+2)*R[2] + *(D+1)*R[3] + *(D+0)*R[4] +R[1])/R[0]);//ok
+	#ifdef DEBUGLEVEL2
+	   //   Result_Model= D[2]*R[3] + D[1]*R[2] + D[0]*R[1] +R[0];
+	   //   printf("Result_Model: %.5f \n",Result_Model);
+	   // fprintf(filelog,"%.10f \n",Result_Model);
 
-   //fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][ndummy2],ModelParts[1][ndummy2],ModelParts[2][ndummy2],ModelParts[3][ndummy2],ModelParts[4][ndummy2],ModelParts[5][ndummy2],ModelParts[6][ndummy2],ModelParts[7][ndummy2],ModelParts[8][ndummy2],ModelParts[9][ndummy2],ModelParts[10][ndummy2],D[2],D[1],D[0],Result_Model);
-   //fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][ndummy],ModelParts[1][ndummy],ModelParts[2][ndummy],ModelParts[3][ndummy],ModelParts[4][ndummy],ModelParts[5][ndummy],ModelParts[6][ndummy],ModelParts[7][ndummy],ModelParts[8][ndummy],ModelParts[9][ndummy],ModelParts[10][ndummy],D[2],D[1],D[0],Result_Model);
-   fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][iWindow],ModelParts[1][iWindow],ModelParts[2][iWindow],ModelParts[3][iWindow],ModelParts[4][iWindow],ModelParts[5][iWindow],ModelParts[6][iWindow],ModelParts[7][iWindow],ModelParts[8][iWindow],ModelParts[9][iWindow],ModelParts[10][iWindow],D[2],D[1],D[0],Result_Model);
+	   //fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][ndummy2],ModelParts[1][ndummy2],ModelParts[2][ndummy2],ModelParts[3][ndummy2],ModelParts[4][ndummy2],ModelParts[5][ndummy2],ModelParts[6][ndummy2],ModelParts[7][ndummy2],ModelParts[8][ndummy2],ModelParts[9][ndummy2],ModelParts[10][ndummy2],D[2],D[1],D[0],Result_Model);
+	   //fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][ndummy],ModelParts[1][ndummy],ModelParts[2][ndummy],ModelParts[3][ndummy],ModelParts[4][ndummy],ModelParts[5][ndummy],ModelParts[6][ndummy],ModelParts[7][ndummy],ModelParts[8][ndummy],ModelParts[9][ndummy],ModelParts[10][ndummy],D[2],D[1],D[0],Result_Model);
+	   fprintf(filelog,"%.3f %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f\n",*((pSignal)->pTimeR+31),*(*(ModelParts2+0)+iWindow),*(*(ModelParts2+1)+iWindow),*(*(ModelParts2+2)+iWindow),*(*(ModelParts2+3)+iWindow),*(*(ModelParts2+4)+iWindow),*(*(ModelParts2+5)+iWindow),*(*(ModelParts2+6)+iWindow),*(*(ModelParts2+7)+iWindow),*(*(ModelParts2+8)+iWindow),*(*(ModelParts2+9)+iWindow),*(*(ModelParts2+10)+iWindow),*(*(ModelParts2+11)+iWindow),*(*(ModelParts2+12)+iWindow),*(*(ModelParts2+13)+iWindow),D[2],D[1],D[0],Result_Model);
+	   //fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][iWindow],ModelParts[1][iWindow],ModelParts[2][iWindow],ModelParts[3][iWindow],ModelParts[4][iWindow],ModelParts[5][iWindow],ModelParts[6][iWindow],ModelParts[7][iWindow],ModelParts[8][iWindow],ModelParts[9][iWindow],ModelParts[10][iWindow],D[2],D[1],D[0],Result_Model);
 
-   printf ("ventana iwindows: %d  ndummy: %d  ndummy2:  %d  \n", iWindow, ndummy, ndummy2);
-
+	   //printf ("ventana iwindows: %d  ndummy: %d  ndummy2:  %d  \n", iWindow, ndummy, ndummy2);
+	#endif
 
 
    if (Result_Model > 0){
      printf("\n ********* Disruption at  t: %f       *********** \n",*((pSignal)->pTimeR+31));
      fprintf (fileRes,"%d \t %s \t %.3f \n",shotNumber,"+1",*((pSignal)->pTimeR+31));
      finish=TRUE;
+   }
+   else{
+	   if (tini>finaltime){
+		     printf("\n ********* Signal end NO DISRUPTION       *********** \n",*((pSignal)->pTimeR+31));
+		     fprintf (fileRes,"%d \t %s \t %s \n",shotNumber,"-1","-----");	//If no disruption the alarm time equal 0
+		     finish=TRUE;
+	   }
    }
 
 

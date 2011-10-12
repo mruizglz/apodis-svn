@@ -77,6 +77,7 @@ struct ccommand clist[] = {
 	{"Minimum", 	        S1A,c_set_string,	&conf_PathMin},
 	{"PathModel", 		S1A,c_set_string,	&conf_PathModel},
 	{"PathR", 		S1A,c_set_string,	&conf_PathR},
+	{"PathNormalize", 		S1A,c_set_string,	&conf_PathNormalize},
 	{"Sampling", 		S1A,c_set_double,	&conf_Sampling},
 	{"Npoints",	        S1A,c_set_int,		&conf_Npoints},
 	{"Nsignals",	        S1A,c_set_int,		&conf_Nsignals},

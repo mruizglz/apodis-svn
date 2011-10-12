@@ -435,7 +435,7 @@ void  M_values (char * path, model *Model){
 	char *endptr;
 	double dummy;
 
-	printf("Entra \n");
+	//printf("Entra \n");
 	file = fopen(path, "r");
 
 	if (!file){
@@ -446,12 +446,12 @@ void  M_values (char * path, model *Model){
 	fgets(buf, 1024, file);
 	b=buf;
 	endptr= NULL;
-        printf("b : %s \n",b);
+        //printf("b : %s \n",b);
 	Model->gamma= (double)strtod(b,&endptr);
 	Model->bias= (double)strtod(endptr,&endptr);
 	Model->w=(double)strtod(endptr,&endptr);
 
-	printf("Gamma: %f   bias: %f w: %f \n",Model->gamma,Model->bias,Model->w);
+	//printf("Gamma: %f   bias: %f w: %f \n",Model->gamma,Model->bias,Model->w);
 
 	for (i=0;i<Model->nvectors;i++){
 	  fgets(buf, 1024, file);
