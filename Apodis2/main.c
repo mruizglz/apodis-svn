@@ -23,8 +23,8 @@ JET signal reading method provide by Jesus Vega (CIEMAT)
 
 void PRINTSIGNAL( signal *entrada);
 
-#define DEBUGLEVEL1	1
-#define DEBUGLEVEL2	2
+//#define DEBUGLEVEL1	1
+//#define DEBUGLEVEL2	2
 
 main(int argc, char *argv[]){
 
@@ -80,7 +80,7 @@ main(int argc, char *argv[]){
   double ModelParts[11][3];//Este hay que pasarlo tambien a dinamico
   double **ModelParts2;
 
-  int NProcSignals;	//Number of processing signals =
+  //int NProcSignals;	//Number of processing signals =
 
   //double ColumnModel[11];
   //double D[3];	//tambien a dinÃ¡mico
@@ -108,6 +108,7 @@ main(int argc, char *argv[]){
 	FILE *fileRes;
 
   double finaltime;
+  int tcurrent;
 
 
   /* Test of input parameters */
@@ -633,7 +634,6 @@ main(int argc, char *argv[]){
 			   */
 			   t=resampling2 ( *(t0+i), conf_Sampling, z, tini,*((pSignal+i)->pM+j) ,(pSignal+i));
 
-
 			  /*
 			  //       if (i==0) printf("tiempos indice t retorno : %d \n",t);
 			  if (t==0){
@@ -648,6 +648,7 @@ main(int argc, char *argv[]){
 
 	  }
 	 // printf("%.3f \n",tini);
+//	  printf("Current %.3f \n", current );
 
 	  for (i=0;i<conf_Nsignals;i++){ //Resampling for raw signals only
 		  txt[0]= NULL;
@@ -750,6 +751,8 @@ main(int argc, char *argv[]){
 	   //printf ("ventana iwindows: %d  ndummy: %d  ndummy2:  %d  \n", iWindow, ndummy, ndummy2);
 	#endif
 
+  tcurrent= IndexEvent((pSignal)->pData+*(t0),(pSignal)->nSamples,conf_Threshold,1); //Look for the time when Ipla < Threshold
+  dummy= *(pSignal->pTime+tcurrent);
 
    if (Result_Model > 0){
      printf("\n ********* Disruption at  t: %f       *********** \n",*((pSignal)->pTimeR+31));
@@ -757,7 +760,8 @@ main(int argc, char *argv[]){
      finish=TRUE;
    }
    else{
-	   if (tini>finaltime){
+//	   if (tini>finaltime || (torigin + 0.010)){
+	   if (tini>dummy){
 		     printf("\n ********* Signal end NO DISRUPTION       *********** \n",*((pSignal)->pTimeR+31));
 		     fprintf (fileRes,"%d \t %s \t %s \n",shotNumber,"-1","-----");	//If no disruption the alarm time equal 0
 		     finish=TRUE;
