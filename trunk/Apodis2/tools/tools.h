@@ -54,7 +54,7 @@ int iwindow_1 (int *indice, int nModelos);
 double prod_vect (double *input, double *Coeficientes, double bias, int nCoeficientes);
 int iwindow1 (int *indice, int nModelos);
 void salvaResampling ( double *input, double *tiempo, char *path, int points);
-
+double  tsincro (char * path, double tini);
 
 
 #endif

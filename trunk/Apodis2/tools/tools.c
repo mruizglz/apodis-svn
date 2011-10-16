@@ -729,4 +729,46 @@ void salvaResampling ( double *input, double *tiempo, char *path, int points){
 
 }
 
+double  tsincro (char * path, double tini){
+
+	FILE *file;
+
+	char buf[1025], *b;
+	int line = 0;
+	int t=0;
+	int i;
+	int len;
+	char *endptr;
+	double dummy;
+	double time, value;
+
+	//printf("Entra \n");
+	file = fopen(path, "r");
+
+	if (!file){
+	  printf ("Proccess file for time syncro Not Found %s \n", path);
+	  exit(EXIT_FAILURE);
+	}
+
+	time=0;
+
+	 do {
+
+		fgets(buf, 1024, file);
+		b=buf;
+		endptr= NULL;
+	        //printf("b : %s \n",b);
+		time= (double)strtod(b,&endptr);
+		value= (double)strtod(endptr,&endptr);
+
+
+	} while (time < tini);
+
+	 return (time);
+
+
+
+}
+
+
 
