@@ -23,9 +23,10 @@ JET signal reading method provide by Jesus Vega (CIEMAT)
 
 void PRINTSIGNAL( signal *entrada);
 
-//#define DEBUGLEVEL1	1
-//#define DEBUGLEVEL2	2
-//#define DEBUGSINCRO	3
+#define DEBUGLEVEL1	1
+#define DEBUGLEVEL2	2
+#define DEBUGSINCRO	3
+#define DEBUGWINDOW	4
 
 //prueba solo verificacion funciona el svn
 
@@ -282,6 +283,14 @@ main (int argc, char *argv[]){
 
   //At this point the signal have been read form the JET BBDD
 
+  //Handle exceptions
+
+  for (i=0;i < (pSignal+5)->nSamples;i++){
+	  *((pSignal+5)->pData+i)= *((pSignal+5)->pData+i) < 1000 ? 1000 : *((pSignal+5)->pData+i);
+  }
+  for (i=0;i<(pSignal+6)->nSamples;i++){
+	  *((pSignal+6)->pData+i)= *((pSignal+6)->pData+i) < 1 ? 1 : *((pSignal+6)->pData+i);
+  }
 
   finaltime= *(pSignal->pTime+((pSignal->nSamples)-5)); //final time for Ipla minus 5 samples for security
 
@@ -380,7 +389,7 @@ main (int argc, char *argv[]){
 
 	  sprintf(procesada,"./procesadas/DES_%d_01_proc.txt",shotNumber);
 
-	  tini= tsincro (procesada, tini);
+	  tini= tsincro (procesada, tini) + 0.001;
 
 	  printf("Sincronize signal at : %f \n",tini);
 	#endif
@@ -761,9 +770,12 @@ main (int argc, char *argv[]){
 	   //   Result_Model= D[2]*R[3] + D[1]*R[2] + D[0]*R[1] +R[0];
 	   //   printf("Result_Model: %.5f \n",Result_Model);
 	   // fprintf(filelog,"%.10f \n",Result_Model);
-
-	   //fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][ndummy2],ModelParts[1][ndummy2],ModelParts[2][ndummy2],ModelParts[3][ndummy2],ModelParts[4][ndummy2],ModelParts[5][ndummy2],ModelParts[6][ndummy2],ModelParts[7][ndummy2],ModelParts[8][ndummy2],ModelParts[9][ndummy2],ModelParts[10][ndummy2],D[2],D[1],D[0],Result_Model);
-	   //fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][ndummy],ModelParts[1][ndummy],ModelParts[2][ndummy],ModelParts[3][ndummy],ModelParts[4][ndummy],ModelParts[5][ndummy],ModelParts[6][ndummy],ModelParts[7][ndummy],ModelParts[8][ndummy],ModelParts[9][ndummy],ModelParts[10][ndummy],D[2],D[1],D[0],Result_Model);
+		#ifdef DEBUGWINDOW
+		   //fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][ndummy2],ModelParts[1][ndummy2],ModelParts[2][ndummy2],ModelParts[3][ndummy2],ModelParts[4][ndummy2],ModelParts[5][ndummy2],ModelParts[6][ndummy2],ModelParts[7][ndummy2],ModelParts[8][ndummy2],ModelParts[9][ndummy2],ModelParts[10][ndummy2],D[2],D[1],D[0],Result_Model);
+		   //fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][ndummy],ModelParts[1][ndummy],ModelParts[2][ndummy],ModelParts[3][ndummy],ModelParts[4][ndummy],ModelParts[5][ndummy],ModelParts[6][ndummy],ModelParts[7][ndummy],ModelParts[8][ndummy],ModelParts[9][ndummy],ModelParts[10][ndummy],D[2],D[1],D[0],Result_Model);
+		   fprintf(filelog,"%.3f %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f\n",*((pSignal)->pTimeR+31),*(*(ModelParts2+0)+ndummy2),*(*(ModelParts2+1)+ndummy2),*(*(ModelParts2+2)+ndummy2),*(*(ModelParts2+3)+ndummy2),*(*(ModelParts2+4)+ndummy2),*(*(ModelParts2+5)+ndummy2),*(*(ModelParts2+6)+ndummy2),*(*(ModelParts2+7)+ndummy2),*(*(ModelParts2+8)+ndummy2),*(*(ModelParts2+9)+ndummy2),*(*(ModelParts2+10)+ndummy2),*(*(ModelParts2+11)+ndummy2),*(*(ModelParts2+12)+ndummy2),*(*(ModelParts2+13)+ndummy2),D[2],D[1],D[0],Result_Model);
+		   fprintf(filelog,"%.3f %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f\n",*((pSignal)->pTimeR+31),*(*(ModelParts2+0)+ndummy),*(*(ModelParts2+1)+ndummy),*(*(ModelParts2+2)+ndummy),*(*(ModelParts2+3)+ndummy),*(*(ModelParts2+4)+ndummy),*(*(ModelParts2+5)+ndummy),*(*(ModelParts2+6)+ndummy),*(*(ModelParts2+7)+ndummy),*(*(ModelParts2+8)+ndummy),*(*(ModelParts2+9)+ndummy),*(*(ModelParts2+10)+ndummy),*(*(ModelParts2+11)+ndummy),*(*(ModelParts2+12)+ndummy),*(*(ModelParts2+13)+ndummy),D[2],D[1],D[0],Result_Model);
+	   #endif
 	   fprintf(filelog,"%.3f %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f  %.7f\n",*((pSignal)->pTimeR+31),*(*(ModelParts2+0)+iWindow),*(*(ModelParts2+1)+iWindow),*(*(ModelParts2+2)+iWindow),*(*(ModelParts2+3)+iWindow),*(*(ModelParts2+4)+iWindow),*(*(ModelParts2+5)+iWindow),*(*(ModelParts2+6)+iWindow),*(*(ModelParts2+7)+iWindow),*(*(ModelParts2+8)+iWindow),*(*(ModelParts2+9)+iWindow),*(*(ModelParts2+10)+iWindow),*(*(ModelParts2+11)+iWindow),*(*(ModelParts2+12)+iWindow),*(*(ModelParts2+13)+iWindow),D[2],D[1],D[0],Result_Model);
 	   //fprintf(filelog,"%.3f\t%.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f   %.7f %.7f %.7f %.7f %.7f\n",*((pSignal)->pTimeR+31),ModelParts[0][iWindow],ModelParts[1][iWindow],ModelParts[2][iWindow],ModelParts[3][iWindow],ModelParts[4][iWindow],ModelParts[5][iWindow],ModelParts[6][iWindow],ModelParts[7][iWindow],ModelParts[8][iWindow],ModelParts[9][iWindow],ModelParts[10][iWindow],D[2],D[1],D[0],Result_Model);
 
@@ -772,7 +784,7 @@ main (int argc, char *argv[]){
 
 
    if (Result_Model > 0){
-     printf("\n ********* Disruption at  t: %f       *********** \n",*((pSignal)->pTimeR+31));
+     printf("\n ********* Disruption in %d at  t: %f       *********** \n",shotNumber,*((pSignal)->pTimeR+31));
      fprintf (fileRes,"%d \t %s \t %.3f \n",shotNumber,"+1",*((pSignal)->pTimeR+31));
      finish=TRUE;
    }
@@ -780,7 +792,7 @@ main (int argc, char *argv[]){
 //	   if (tini>finaltime || (torigin + 0.010)){
 //	   if (tini>dummy){
 	   if (tini>finaltime ){
-		     printf("\n ********* Signal end NO DISRUPTION       *********** \n",*((pSignal)->pTimeR+31));
+		     printf("\n ********* Signal %d  end NO DISRUPTION       *********** \n",shotNumber ,*((pSignal)->pTimeR+31));
 		     fprintf (fileRes,"%d \t %s \t %s \n",shotNumber,"-1","-----");	//If no disruption the alarm time equal 0
 		     finish=TRUE;
 	   }
@@ -796,7 +808,9 @@ main (int argc, char *argv[]){
 	fclose(fileRes);
 
 
-
+    free(pSignal);
+    free(pModel);
+    free(ColumnModel);
 
 
 
