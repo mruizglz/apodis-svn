@@ -25,13 +25,18 @@ void PRINTSIGNAL( signal *entrada);
 
 //#define DEBUGLEVEL1	1
 //#define DEBUGLEVEL2	2
+//#define DEBUGSINCRO	3
 
-main(int argc, char *argv[]){
+//prueba solo verificacion funciona el svn
+
+main (int argc, char *argv[]){
 
   char signalList[CHARMAX];  //input name of signals file
   char ResultFileName[CHARMAX]; //File name to save rsults. If File exits append results, if no File is created
   int shotNumber;  // Input Shot number
   int Nsignals;    //Number the signal to use input+calculated
+
+  char procesada[CHARMAX];
 
   signal *pSignal; //Pointer to struct signal, this struct contains all information of a signal
 
@@ -55,10 +60,10 @@ main(int argc, char *argv[]){
   int error;  //Error indicator
   int ndata; //Number of datos of a signal
 
-  double **pArray; //pointer to array
+//  double **pArray; //pointer to array
   double *pBuffer; //Pointer to buffer
-  double *pBuffer1; //Pointer to buffer
-  double *pBuffer2; //Pointer to buffer
+//  double *pBuffer1; //Pointer to buffer
+//  double *pBuffer2; //Pointer to buffer
 
   int  *ToNormalize; // pointer to array with actions about normalize proccess
                      //[12]={TRUE,TRUE,FALSE,TRUE,TRUE,FALSE,FALSE,TRUE,TRUE,FALSE,FALSE,FALSE};
@@ -72,12 +77,12 @@ main(int argc, char *argv[]){
   double dummy;
   double **Mdummy;
 
-  int **rowptr;
+//  int **rowptr;
 
   int Ncoefficients;
 
   double R[5];   //Este hay que pasarlo tambien a dinamico
-  double ModelParts[11][3];//Este hay que pasarlo tambien a dinamico
+//  double ModelParts[11][3];//Este hay que pasarlo tambien a dinamico
   double **ModelParts2;
 
   //int NProcSignals;	//Number of processing signals =
@@ -366,6 +371,20 @@ main(int argc, char *argv[]){
 
   tini= torigin; //Fix to Signal 1 origin
   //tini= 42.330061; //Fix to Signal 1 origin
+
+  tcurrent= IndexEvent(((pSignal)->pData+(*t0)+50),((pSignal)->nSamples)-((*t0)+50),conf_Threshold,1); //Look for the time when Ipla < Threshold
+  finaltime= *(pSignal->pTime+(tcurrent+(*t0)+50));
+
+	#ifdef DEBUGSINCRO
+	  //We are to looking for the initial time in sebas's files
+
+	  sprintf(procesada,"./procesadas/DES_%d_01_proc.txt",shotNumber);
+
+	  tini= tsincro (procesada, tini);
+
+	  printf("Sincronize signal at : %f \n",tini);
+	#endif
+
 
   for (j=conf_NModels-1;j>=0;j--){	//Fill
 
@@ -751,8 +770,6 @@ main(int argc, char *argv[]){
 	   //printf ("ventana iwindows: %d  ndummy: %d  ndummy2:  %d  \n", iWindow, ndummy, ndummy2);
 	#endif
 
-  tcurrent= IndexEvent((pSignal)->pData+*(t0),(pSignal)->nSamples,conf_Threshold,1); //Look for the time when Ipla < Threshold
-  dummy= *(pSignal->pTime+tcurrent);
 
    if (Result_Model > 0){
      printf("\n ********* Disruption at  t: %f       *********** \n",*((pSignal)->pTimeR+31));
@@ -761,7 +778,8 @@ main(int argc, char *argv[]){
    }
    else{
 //	   if (tini>finaltime || (torigin + 0.010)){
-	   if (tini>dummy){
+//	   if (tini>dummy){
+	   if (tini>finaltime ){
 		     printf("\n ********* Signal end NO DISRUPTION       *********** \n",*((pSignal)->pTimeR+31));
 		     fprintf (fileRes,"%d \t %s \t %s \n",shotNumber,"-1","-----");	//If no disruption the alarm time equal 0
 		     finish=TRUE;
@@ -799,3 +817,5 @@ void PRINTSIGNAL( signal *entrada){
   }
 
 }
+
+
