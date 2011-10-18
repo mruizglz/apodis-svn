@@ -563,9 +563,9 @@ double distance (double *input, model *Model){
    double *ind_vector;
    double *ind_X;
   double dummy;
-  double  norm=0;
+  double  norm;
    double e=0;
-   double  sum=0;
+   double  sum;
    double u=0;
 
 
@@ -573,10 +573,10 @@ double distance (double *input, model *Model){
    ind_vector= *(Model->data);
    ind_X= input;
 
-	sum=0;
+	sum=(double) 0;
 
 	for (i=0;i < Model->nvectors; i++){
-                norm=0;
+                norm= (double) 0;
 		//	printf("vector: %d \n ", i);
 		for (t=0;t < Model->coef_vector;t++){
 		   dummy= *(ind_vector+t)-*(ind_X+t);
@@ -587,7 +587,7 @@ double distance (double *input, model *Model){
 		   //printf("Input %.10f \t",*(ind_X+t));
 		   //printf("Resta %.10f \t",dummy);
 
-		   dummy= pow(dummy,2);
+		   dummy= pow(dummy,(double)2);
 		   //printf("Cuadrado : %.10f\t",dummy);
 		   norm=norm+dummy;
 		   //printf("norma : %.10f\n",norm);
@@ -596,7 +596,7 @@ double distance (double *input, model *Model){
 		//printf("norma : %.10f\n",norm);
  		//norm= pow(norm,2);
 		// printf("x2 : %.10f\n",norm);
-		norm=norm*-1.00*Model->gamma;
+		norm=-norm*Model->gamma;
 		//printf("-gamma : %.10f\t",norm);
 		e=exp(norm);
 		//printf("e : %.10f\t",e);
