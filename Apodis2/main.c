@@ -389,7 +389,7 @@ main (int argc, char *argv[]){
 
 	  sprintf(procesada,"./procesadas/DES_%d_01_proc.txt",shotNumber);
 
-	  tini= tsincro (procesada, tini) + 0.001;
+	  tini= tsincro (procesada, tini);
 
 	  printf("Sincronize signal at : %f \n",tini);
 	#endif
