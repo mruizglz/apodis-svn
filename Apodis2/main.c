@@ -23,10 +23,12 @@ JET signal reading method provide by Jesus Vega (CIEMAT)
 
 void PRINTSIGNAL( signal *entrada);
 
-#define DEBUGLEVEL1	1
-#define DEBUGLEVEL2	2
-#define DEBUGSINCRO	3
-#define DEBUGWINDOW	4
+//#define DEBUGLEVEL1	1
+//#define DEBUGLEVEL2	2
+//#define DEBUGSINCRO	3
+//#define DEBUGWINDOW	4
+//#define DEBUGWNAME	5
+
 
 //prueba solo verificacion funciona el svn
 
@@ -329,9 +331,12 @@ main (int argc, char *argv[]){
  free(Minimums);
  free(ToNormalize);
 
+	sprintf(procesada,"W.txt"); //Reuse procesada buffer
+	#ifdef DEBUGWNAME
+		sprintf(procesada,"W%d.txt",shotNumber); //Reuse procesada buffer
+	#endif
 
-
-	filelog = fopen("W.txt", "w");
+	filelog = fopen(procesada, "w");
 	fileRes = fopen( ResultFileName, "a");
 
   //Look for t0 for the signals, the reference is Ipla signal 0
