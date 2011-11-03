@@ -20,7 +20,7 @@ Tools set to Resamplig and Normalize discharge signals
 #include "tools.h"
 
 
-
+#define LIKETR	6
 
 
 //********************************************************
@@ -209,19 +209,29 @@ int  resampling2 (int index, double resampling, int indexR, double t0, double *p
 
 	  	  // t0= *(wave->pTime+index);
 	  Normalize= (wave->Normalize);
-	  //printf ("Resampling  %s  Index: %d Dato: %f Normaliza: %d  \n",wave->name,index,*(wave->pData+index),Normalize);
-	  rindex= IndexEvent( (wave->pTime+index), wave->nSamples, t0, 1);
-	  rindex= rindex+index;
-      intermediate = IntLin (*(wave->pTime+rindex), *(wave->pData+rindex), *(wave->pTime+rindex+1),  *(wave->pData+rindex+1),t0);
-      if (Normalize){
-    	  *(pDataR+indexR)= normalize (wave->Max, wave->Min, intermediate);
-    	  //	printf(" Res: %f \n",*(pDataR+rindex));
-      }
+	  #ifdef LIKETR
+		   rindex= IndexEvent( (wave->pTime+index), wave->nSamples, t0, 1);
+		   rindex= rindex+index;
+		   intermediate = *(wave->pData+rindex);
+	  #else
+		   //printf ("Resampling  %s  Index: %d Dato: %f Normaliza: %d  \n",wave->name,index,*(wave->pData+index),Normalize);
+		   rindex= IndexEvent( (wave->pTime+index), wave->nSamples, t0, 1);
+		   rindex= rindex+index;
+		   intermediate = IntLin (*(wave->pTime+rindex), *(wave->pData+rindex), *(wave->pTime+rindex+1),  *(wave->pData+rindex+1),t0);
+	  #endif
 
-      else{
-    	  *(pDataR+indexR)= intermediate;
-    	  //	  printf(" Intermediate: %f \n",*(pDataR+rindex));
-      }
+	   if (Normalize){
+		   *(pDataR+indexR)= normalize (wave->Max, wave->Min, intermediate);
+		   //	printf(" Res: %f \n",*(pDataR+rindex));
+	   }
+
+	   else{
+		   *(pDataR+indexR)= intermediate;
+		   //	  printf(" Intermediate: %f \n",*(pDataR+rindex));
+	   }
+
+
+
 
 	  *(wave->pTimeR+indexR)= t0;
 
