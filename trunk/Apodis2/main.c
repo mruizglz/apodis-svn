@@ -15,11 +15,14 @@ JET signal reading method provide by Jesus Vega (CIEMAT)
 #include <string.h>
 #include <stdlib.h>
 #include <iso646.h>
+#include <ppf.h>
 #include "tipos.h"
 #include "getfix/getfix.h"
 #include "./tools/tools.h"
 #include "./configuracion/config.h"
 #include "./fft/fft.h"
+
+
 
 void PRINTSIGNAL( signal *entrada);
 
@@ -118,6 +121,16 @@ main (int argc, char *argv[]){
   double finaltime;
   int tcurrent;
 
+  //Variables for PPF processing
+
+  char *pPwd = "";
+  char *pUser = "ppfread";
+  int status;
+  int lun = 0;
+  int seqNumber = 0;
+  int shotppf = 0;
+
+
 
   /* Test of input parameters */
   if(argc != 4)
@@ -207,64 +220,87 @@ main (int argc, char *argv[]){
     //    printf("Reading %s from shot %d\n",(pSignal+i)->name, shotNumber);
     fflush(stdout);
 
-    getnwds_((pSignal+i)->name, &shotNumber, &ndata, &error, (long) strlen((pSignal+i)->name)); //Determine the space needed
+   if ((pSignal+i)->name[0] == '*' ){ //PPF signal's name start by *
 
-    //    printf ("Debugg nData: %d error: %d\n", ndata, error);
-    if ((!error) && (ndata > 0)){  //data are available
-      if( ((pSignal+i)->pData = (double *) malloc(ndata*sizeof(double))) == (double *) 0 ){ //Allocate memory
-              free(pSignal);
-	      printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+i)->name, shotNumber);
-	      exit(0);
-       }
-      if(((pSignal+i)->pTime = (double *) malloc(ndata*sizeof(double))) == (double *) 0){ //Allocate memory
-	      free((pSignal+i)->pData);
-              free(pSignal);
-	      printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+i)->name, shotNumber);
-	      exit(0);
-       }
+    	strcpy((pSignal+i)->name,(pSignal+i)->name+1); //delete *
 
-      if( (SignalJET = (float *) malloc(ndata*sizeof(float))) == (float *) 0 ){ //Allocate memory
-              free(pSignal);
-	      printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+i)->name, shotNumber);
-	      exit(0);
-       }
-      if((TimeJET = (float *) malloc(ndata*sizeof(float))) == (float *) 0){ //Allocate memory
-	      free((pSignal+i)->pData);
-              free(pSignal);
-	      printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+i)->name, shotNumber);
-	      exit(0);
-       }
+//    	PPFPWD(pUser, pPwd, (unsigned int) strlen(pUser), (unsigned int) strlen(pPwd));
+//    	PPFPOK(&status);
+    	if(status)
+    	    {
+    	      printf("Error in ppfpwd(). Status: %d\n\nEnd of program\n", status);
+    	      exit(0);
+    	    }
+//    	  PPFGO(&shotppf, &seqNumber, &lun, &status);
+    	  if(status)
+    	    {
+    	      printf("Error in ppfgo(). Status: %d\n\nEnd of program\n", status);
+    	      exit(0);
+    	    }
 
 
 
-       // Pre set last char of returned text to 0 for c string
-       title [sizeof(title) - 1] = 0;
-       units [sizeof(units) - 1] = 0;
-       //  getdat_((pSignal+i)->name, &shotNumber, (pSignal+i)->pData, (pSignal+i)->pTime,&ndata , title, units, &error,(long) strlen((pSignal+i)->name), sizeof(title) - 1l, sizeof(units) - 1l);
-       getdat_((pSignal+i)->name, &shotNumber, SignalJET, TimeJET ,&ndata , title, units, &error,(long) strlen((pSignal+i)->name), sizeof(title) - 1l, sizeof(units) - 1l);
+    }
+    else {
+		getnwds_((pSignal+i)->name, &shotNumber, &ndata, &error, (long) strlen((pSignal+i)->name)); //Determine the space needed
+    }
 
-       (pSignal+i)->nSamples= ndata;
-       (pSignal+i)->Npoints= conf_Npoints;
+		//    printf ("Debugg nData: %d error: %d\n", ndata, error);
+		if ((!error) && (ndata > 0)){  //data are available
+			if( ((pSignal+i)->pData = (double *) malloc(ndata*sizeof(double))) == (double *) 0 ){ //Allocate memory
+				free(pSignal);
+				printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+i)->name, shotNumber);
+				exit(0);
+			}
+			if(((pSignal+i)->pTime = (double *) malloc(ndata*sizeof(double))) == (double *) 0){ //Allocate memory
+				free((pSignal+i)->pData);
+				free(pSignal);
+				printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+i)->name, shotNumber);
+				exit(0);
+			}
+
+			if( (SignalJET = (float *) malloc(ndata*sizeof(float))) == (float *) 0 ){ //Allocate memory
+				free(pSignal);
+				printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+i)->name, shotNumber);
+				exit(0);
+			}
+			if((TimeJET = (float *) malloc(ndata*sizeof(float))) == (float *) 0){ //Allocate memory
+				free((pSignal+i)->pData);
+				free(pSignal);
+				printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+i)->name, shotNumber);
+				exit(0);
+			}
 
 
-       for (j=0;j<ndata; j++){
-	 *((pSignal+i)->pData+j)= (double) *(SignalJET+j);
-	 *((pSignal+i)->pTime+j)= (double) *(TimeJET+j);
 
-       }
+			// Pre set last char of returned text to 0 for c string
+			title [sizeof(title) - 1] = 0;
+			units [sizeof(units) - 1] = 0;
+			//  getdat_((pSignal+i)->name, &shotNumber, (pSignal+i)->pData, (pSignal+i)->pTime,&ndata , title, units, &error,(long) strlen((pSignal+i)->name), sizeof(title) - 1l, sizeof(units) - 1l);
+			getdat_((pSignal+i)->name, &shotNumber, SignalJET, TimeJET ,&ndata , title, units, &error,(long) strlen((pSignal+i)->name), sizeof(title) - 1l, sizeof(units) - 1l);
 
-		#ifdef DEBUGLEVEL1
-			txt[0]= NULL;
-			sprintf(txt,"Original_%d.txt",i);
+			(pSignal+i)->nSamples= ndata;
+			(pSignal+i)->Npoints= conf_Npoints;
 
 
- /*     	 salvaOutput (((pSignal+i)->pData),txt,ndata);
-      	 txt[0]= NULL;
-      	 sprintf(txt,"O_Tiempos_%d.txt",i);
-      	 salvaOutput (((pSignal+i)->pTime),txt,ndata);*/
+			for (j=0;j<ndata; j++){
+				*((pSignal+i)->pData+j)= (double) *(SignalJET+j);
+				*((pSignal+i)->pTime+j)= (double) *(TimeJET+j);
 
-			salvaResampling ( ((pSignal+i)->pData), ((pSignal+i)->pTime), txt, ndata);
-		#endif
+			}
+
+			#ifdef DEBUGLEVEL1
+				txt[0]= NULL;
+				sprintf(txt,"Original_%d.txt",i);
+
+
+				/*     	 salvaOutput (((pSignal+i)->pData),txt,ndata);
+				 txt[0]= NULL;
+				 sprintf(txt,"O_Tiempos_%d.txt",i);
+				 salvaOutput (((pSignal+i)->pTime),txt,ndata);*/
+
+				salvaResampling ( ((pSignal+i)->pData), ((pSignal+i)->pTime), txt, ndata);
+			#endif
 
 
     }
@@ -464,7 +500,7 @@ main (int argc, char *argv[]){
 	 #endif
 
      (pModel+i)->alfa = malloc(sizeof(double )*(pModel+i)->nvectors); //Allocate space for arrays
-     if (Mdummy == NULL){
+     if ((pModel+i)->alfa == NULL){
         free(pSignal);
         printf ("Not space for alfa data array \n");
         exit(0);
