@@ -657,7 +657,7 @@ main (int argc, char *argv[]){
 
 
 
-   Read_M (conf_PathR, R);
+   Read_M (conf_PathR, R, conf_NModels);
 
    printf ("The model has been read \n");
 

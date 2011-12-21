@@ -490,7 +490,7 @@ void  M_values (char * path, model *Model){
 
 }
 
-void  Read_M (char * path, double *M){
+void  Read_M (char * path, double *M, int nmodelos){
 
 
 	FILE *file;
@@ -513,10 +513,14 @@ void  Read_M (char * path, double *M){
 	fgets(buf, 1024, file);
 	b=buf;
 	endptr= NULL;
-	*(M+4)= (double)strtod(b,&endptr);
-	*(M+3)= (double)strtod(endptr,&endptr);
-	*(M+2)= (double)strtod(endptr,&endptr);
-	*(M+1)= (double)strtod(endptr,&endptr);
+//	*(M+4)= (double)strtod(b,&endptr);
+	*(M+nmodelos+1)= (double)strtod(b,&endptr);
+	for (i=nmodelos; i >0; i--){
+		*(M+i)= (double)strtod(endptr,&endptr);
+		//*(M+3)= (double)strtod(endptr,&endptr);
+		//*(M+2)= (double)strtod(endptr,&endptr);
+		//*(M+1)= (double)strtod(endptr,&endptr);
+	}
 	*M= (double)strtod(endptr,&endptr);
 
 
