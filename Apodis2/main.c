@@ -129,6 +129,13 @@ main (int argc, char *argv[]){
   int lun = 0;
   int seqNumber = 0;
   int shotppf = 0;
+  int nx,nt,systat,ustat;
+  char ppfsignal[128], dda[128];
+  char *pslash;
+  char frmt[8],comm[32],ihdat[60];
+  int irdat[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  int iwdat[13];
+  float *pX0;
 
 
 
@@ -224,27 +231,121 @@ main (int argc, char *argv[]){
 
     	strcpy((pSignal+i)->name,(pSignal+i)->name+1); //delete *
 
-//    	PPFPWD(pUser, pPwd, (unsigned int) strlen(pUser), (unsigned int) strlen(pPwd));
-//    	PPFPOK(&status);
-    	if(status)
-    	    {
+    	PPFPWD(pUser, pPwd, (unsigned int) strlen(pUser), (unsigned int) strlen(pPwd));
+    	PPFPOK(&status);
+    	if(status){
     	      printf("Error in ppfpwd(). Status: %d\n\nEnd of program\n", status);
     	      exit(0);
-    	    }
-//    	  PPFGO(&shotppf, &seqNumber, &lun, &status);
-    	  if(status)
-    	    {
+    	}
+    	PPFGO(&shotppf, &seqNumber, &lun, &status);
+    	if(status){
     	      printf("Error in ppfgo(). Status: %d\n\nEnd of program\n", status);
     	      exit(0);
-    	    }
+    	}
+
+    	strcpy(dda,(pSignal+i)->name);
+    	pslash= strstr(dda,"/");
+    	strcpy(ppfsignal,pslash+1);
+    	*pslash=NULL;
+
+    	PPFDTI(&shotNumber, &seqNumber, dda, ppfsignal, &nx, &nt, frmt, units, comm, &systat, &ustat, &status,
+    		 (unsigned int) sizeof(dda),  (unsigned int) sizeof(signal),  (unsigned int) sizeof(frmt),
+    		 (unsigned int) sizeof(units),  (unsigned int) sizeof(comm));
+        if(status){
+    	      printf("Error in ppdti(). Status: %d\n\nEnd of program\n", status);
+    	      exit(0);
+    	}
+        irdat[1] = nx;
+        irdat[3] = nt;
+        irdat[5] = irdat[1] - irdat[0];
+        irdat[6] = irdat[3] - irdat[2];
+        irdat[4] = irdat[5]*irdat[6];
+
+		if ((!status) && (irdat[4] > 0)){  //data are available
+			if( ((pSignal+i)->pData = (double *) malloc(irdat[4]*sizeof(double))) == (double *) 0 ){ //Allocate memory
+				free(pSignal);
+				printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+i)->name, shotNumber);
+				exit(0);
+			}
+			if(((pSignal+i)->pTime = (double *) malloc(irdat[6]*sizeof(double))) == (double *) 0){ //Allocate memory
+				free((pSignal+i)->pData);
+				free(pSignal);
+				printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+i)->name, shotNumber);
+				exit(0);
+			}
+
+			if( (SignalJET = (float *) malloc(irdat[4]*sizeof(float))) == (float *) 0 ){ //Allocate memory
+				free(pSignal);
+				printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+i)->name, shotNumber);
+				exit(0);
+			}
+			if((TimeJET = (float *) malloc(irdat[6]*sizeof(float))) == (float *) 0){ //Allocate memory
+				free((pSignal+i)->pData);
+				free(pSignal);
+				printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+i)->name, shotNumber);
+				exit(0);
+			}
+
+			if((pX0 = (float *) malloc(irdat[5]*sizeof(float))) == (float *) 0)	{
+				  free((pSignal+i)->pData);
+				  free(pSignal);
+			      printf("Error in malloc(X)\n\nEnd of program\n");
+			      exit(0);
+			}
+
+			/*   memset(ihdat, 0, sizeof(ihdat)); */
+			  PPFGET(&shotNumber, dda, ppfsignal, irdat, ihdat, iwdat, SignalJET, pX0, TimeJET, &status, (unsigned int) sizeof(dda),
+				 (unsigned int) sizeof(signal), (unsigned int) sizeof(ihdat));
+			  if(status)
+			    {
+				  free((pSignal+i)->pData);
+				  free(pSignal);
+			      printf("Error in ppfget(). Status: %d\n\nEnd of program\n", status);
+			      exit(0);
+			    }
 
 
+			(pSignal+i)->nSamples= irdat[4];
+			(pSignal+i)->Npoints= conf_Npoints;
+
+
+			for (j=0;j<irdat[4]; j++){
+				*((pSignal+i)->pData+j)= (double) *(SignalJET+j);
+				*((pSignal+i)->pTime+j)= (double) *(TimeJET+j);
+
+			}
+
+			#ifdef DEBUGLEVEL1
+				txt[0]= NULL;
+				sprintf(txt,"Original_%d.txt",i);
+
+
+				/*     	 salvaOutput (((pSignal+i)->pData),txt,ndata);
+				 txt[0]= NULL;
+				 sprintf(txt,"O_Tiempos_%d.txt",i);
+				 salvaOutput (((pSignal+i)->pTime),txt,ndata);*/
+
+				salvaResampling ( ((pSignal+i)->pData), ((pSignal+i)->pTime), txt, irdat[4]);
+			#endif
+
+
+		}
+		else{
+
+			printf("** Probable error due to non existing signal\n** shot %d, signal %s\n",shotNumber, (pSignal+i)->name);
+			fflush(stdout);
+			for(j = i; j <= 0; j--){
+				free((pSignal+i)->pData);
+				free((pSignal+i)->pTime);
+			}
+			free(pSignal);
+			exit(0);
+
+		}
 
     }
     else {
 		getnwds_((pSignal+i)->name, &shotNumber, &ndata, &error, (long) strlen((pSignal+i)->name)); //Determine the space needed
-    }
-
 		//    printf ("Debugg nData: %d error: %d\n", ndata, error);
 		if ((!error) && (ndata > 0)){  //data are available
 			if( ((pSignal+i)->pData = (double *) malloc(ndata*sizeof(double))) == (double *) 0 ){ //Allocate memory
@@ -303,21 +404,39 @@ main (int argc, char *argv[]){
 			#endif
 
 
-    }
-    else{
+		}
+		else{
 
-      printf("** Probable error due to non existing signal\n** shot %d, signal %s\n",shotNumber, (pSignal+i)->name);
-      fflush(stdout);
-      for(j = i; j <= 0; j--){
-	   free((pSignal+i)->pData);
-	   free((pSignal+i)->pTime);
-      }
-      free(pSignal);
-      exit(0);
+			printf("** Probable error due to non existing signal\n** shot %d, signal %s\n",shotNumber, (pSignal+i)->name);
+			fflush(stdout);
+			for(j = i; j <= 0; j--){
+				free((pSignal+i)->pData);
+				free((pSignal+i)->pTime);
+			}
+			free(pSignal);
+			exit(0);
+
+		}
+
 
     }
+
+
+  } //end for
+
+  for (j=0;j<(pSignal+4)->nSamples-1;j++){
+//		 dummy= (double) (*((pSignal+4)->pData+j+1) - *((pSignal+4)->pData+j) );
+		*((pSignal+4)->pData+j)= (double) (*((pSignal+4)->pData+j+1) - *((pSignal+4)->pData+j) );
+		*((pSignal+4)->pTime+j)= (double) (*((pSignal+4)->pTime+j+1) - *((pSignal+4)->pTime+j) );
   }
 
+
+
+  double *pData;        //Pointer to raw data
+  double *pTime;        //pointer to time for raw data signal
+  double *pTimeR;       //pointer to resampling times for nearest time window
+  double **pM;         //pointer to array of pointer of model windows
+  int Normalize;        //the signal has to be Normalize
 
   //At this point the signal have been read form the JET BBDD
 
