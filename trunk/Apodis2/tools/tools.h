@@ -42,7 +42,7 @@ int ReadNormalizeTxt(char *path, int *buffer);
 int ReadModelTxt(char *path, char **buffer);
 void  N_vectors(char * path, int *nvectors, int *ncoefficients);
 void  M_values (char * path, model *Model);
-void  Read_M (char * path, double *M);
+void  Read_M (char * path, double *M, int nmodelos);
 void Absolute ( double (*x)[2], double *result, int npoints);
 //void Absolute ( double *rea, double *imj, double *result, int npoints);
 double Desv (double *pData, int npoints);
