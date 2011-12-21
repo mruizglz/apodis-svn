@@ -111,7 +111,7 @@ main (int argc, char *argv[]){
 
   double resabs[32];
 
-  int iWindow=0;
+   int iWindow=0;
   int ndummy=0;
   int ndummy2=0;
 
@@ -727,35 +727,15 @@ main (int argc, char *argv[]){
   ColumnModel[9]=  0;
   ColumnModel[10]= 0.00002;*/
 
-  for (i=0;i<Ncoefficients;i++){
-    *(ColumnModel+i)= *(*(ModelParts2+i)+0);
+  for(j=0;j<conf_NModels;j++){
+	  for (i=0;i<Ncoefficients;i++){
+	    *(ColumnModel+i)= *(*(ModelParts2+i)+j);
+	  }
+	  *(D+j)= distance (ColumnModel, pModel+j);
   }
 
 
- *(D+0)= distance (ColumnModel, pModel);
-  //D[0]=  distance (ColumnModel, pModel);
-  // printf ("Distancia: %.10f \n",D[0]);
 
-  // dummy= prod_vect (ColumnModel, *pModel->data, pModel->bias, 11);
-
-  //printf ("Distancia dummy : %.10f \n",dummy);
-
-
-
- for (i=0;i<Ncoefficients;i++){
-	 *(ColumnModel+i)= *(*(ModelParts2+i)+1);
- }
-
- *(D+1)= distance (ColumnModel, pModel+1);
-
-  //D[1]=  distance (ColumnModel, pModel+1);
-
- for (i=0;i<Ncoefficients;i++){
-	 *(ColumnModel+i)= *(*(ModelParts2+i)+2);
- }
-
-
-  *(D+2)= distance (ColumnModel, pModel+2);
 
   //D[2]=  distance (ColumnModel, pModel+2);
   //  printf ("Distancia: %.10f \n",D[0]);
@@ -771,6 +751,16 @@ main (int argc, char *argv[]){
   //  fprintf(filelog,"vector D: %.10f \t %.10f \t %.10f \n",D[2],D[1],D[0]);
 
   Result_Model= (double) ((D[2]*R[2] + D[1]*R[3] + D[0]*R[4] +R[1])/R[0]);
+
+  Result_Model= 0.0;
+
+  for(j=0;j<conf_NModels;j++){
+	  Result_Model += (double) (D[j] * R[conf_NModels+1-j]);
+  }
+
+
+  Result_Model= (double)((Result_Model + R[1])/R[0]);
+  //Result_Model= (double) ((D[2]*R[2] + D[1]*R[3] + D[0]*R[4] +R[1])/R[0]);
   //printf("Resultado D2: %.10f  D1: %.10f  D0: %.10f \n",D[2],D[1],D[0]);
   // fprintf(filelog,"%.10f \n",Result_Model);
 
@@ -879,6 +869,12 @@ main (int argc, char *argv[]){
 
    }
 
+  for(kk=0;j<conf_NModels;j++){
+  	  for (i=0;i<Ncoefficients;i++){
+  	    *(ColumnModel+i)= *(*(ModelParts2+i)+j);
+  	  }
+  	  *(D+j)= distance (ColumnModel, pModel+j);
+    }
 
   for (i=0;i<Ncoefficients;i++){
 	  *(ColumnModel+i)= *(*(ModelParts2+i)+iWindow);
