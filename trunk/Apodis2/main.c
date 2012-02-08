@@ -424,12 +424,12 @@ main (int argc, char *argv[]){
 
   } //end for
 
-  for (j=0;j<(pSignal+4)->nSamples-1;j++){
+ for (j=0;j<(pSignal+4)->nSamples-1;j++){
 //		 dummy= (double) (*((pSignal+4)->pData+j+1) - *((pSignal+4)->pData+j) );
 		*((pSignal+4)->pData+j)= (double) (*((pSignal+4)->pData+j+1) - *((pSignal+4)->pData+j) );
 		*((pSignal+4)->pTime+j)= (double) (*((pSignal+4)->pTime+j+1) - *((pSignal+4)->pTime+j) );
   }
-
+printf("Signal 5 is derivate  \n");
 
 
   double *pData;        //Pointer to raw data
@@ -797,36 +797,12 @@ main (int argc, char *argv[]){
 	  for(z=0;z < conf_Npoints;z++){
 
 		  for (i=0;i<conf_Nsignals;i++){ //Resampling for raw signals only
-			  //if (i==0)    printf("tiempos indice t: %d \n", *(t0+i));
-			  //tini= *((pSignal+i)->pTimeR+31); //the time always is pTimeR
-			  //t=resampling ( *(t0+i), conf_Sampling,*((pSignal+ndummy)->pTimeR+31) ,*((pSignal+i)->pM+j) ,(pSignal+i));
-			  //t=resampling ( *(t0+i), conf_Sampling,tini ,*((pSignal+i)->pM+j) ,(pSignal+i));
-			 // *(t0+i)+=t;
 
-			  /*       txt[0]= NULL;
-			   sprintf(txt,"Signal_%d_%d.txt",i,k);
-			   salvaOutput (*((pSignal+i)->pM+j),txt,32);
-			   txt[0]= NULL;
-			   sprintf(txt,"Tiempos_%d_%d.txt",i,k);
-			   salvaOutput (((pSignal+i)->pTimeR),txt,32);
-			   */
 			   t=resampling2 ( *(t0+i), conf_Sampling, z, tini,*((pSignal+i)->pM+j) ,(pSignal+i));
-
-			  /*
-			  //       if (i==0) printf("tiempos indice t retorno : %d \n",t);
-			  if (t==0){
-				  printf("\n ***********  Signal end reach No disruption **************\n");
-				  fprintf (fileRes,"%d \t %s \t %.3f \n",shotNumber,"-1",*((pSignal)->pTimeR+31));
-				  finish= TRUE;
-				  break;
-			  }
-			  */
 		  }
 		  tini += conf_Sampling;
 
 	  }
-	 // printf("%.3f \n",tini);
-//	  printf("Current %.3f \n", current );
 
 	  for (i=0;i<conf_Nsignals;i++){ //Resampling for raw signals only
 		  txt[0]= NULL;
@@ -836,7 +812,6 @@ main (int argc, char *argv[]){
 
 			  salvaResampling ( *((pSignal+i)->pM+j), (pSignal+i)->pTimeR, txt, (pSignal+i)->Npoints);
 		  #endif
-
 
 	  }
 
@@ -854,42 +829,42 @@ main (int argc, char *argv[]){
 
      	*(*(ModelParts2+(z*2))+j)= Mean (*((pSignal+z)->pM+j), conf_Npoints);
 
-   	//des ipla
-   	pBuffer= *((pSignal+z)->pM+j);
-   	for (t=0;t<conf_Npoints;t++){
+     	//des ipla
+     	pBuffer= *((pSignal+z)->pM+j);
+     	for (t=0;t<conf_Npoints;t++){
      		infft[t][0]=*(pBuffer+t); infft[t][1]=0;
-   	}
+     	}
 
-   	fft(conf_Npoints, infft, outfft);
+     	fft(conf_Npoints, infft, outfft);
 
-   	Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
+     	Absolute (outfft, resabs, conf_Npoints/2); //Only firts part of FFT
 
-      //ModelParts[3][i]= Desv (resabs, conf_Npoints/2);
-      *(*(ModelParts2+((z*2)+1))+j)= Desv (resabs, conf_Npoints/2);
+     	//ModelParts[3][i]= Desv (resabs, conf_Npoints/2);
+     	*(*(ModelParts2+((z*2)+1))+j)= Desv (resabs, conf_Npoints/2);
 
    }
 
-  for(kk=0;j<conf_NModels;j++){
-  	  for (i=0;i<Ncoefficients;i++){
-  	    *(ColumnModel+i)= *(*(ModelParts2+i)+j);
-  	  }
-  	  *(D+j)= distance (ColumnModel, pModel+j);
-    }
+  /* for(kk=0;j<conf_NModels;j++){
+	   for (i=0;i<Ncoefficients;i++){
+		   *(ColumnModel+i)= *(*(ModelParts2+i)+j);
+	   }
+	   *(D+j)= distance (ColumnModel, pModel+j);
+   }*/
 
-  for (i=0;i<Ncoefficients;i++){
-	  *(ColumnModel+i)= *(*(ModelParts2+i)+iWindow);
-  }
+   for (i=0;i<Ncoefficients;i++){
+	   *(ColumnModel+i)= *(*(ModelParts2+i)+iWindow);
+   }
 
 
-  //  D[0]=  distance (ColumnModel, pModel+iWindow);
-  //D[0]=  distance (ColumnModel, pModel); //El modelo siempre es el mismo que D es decir 0 en este caso
-  *(D+0)= distance (ColumnModel, pModel);
+   //  D[0]=  distance (ColumnModel, pModel+iWindow);
+   //D[0]=  distance (ColumnModel, pModel); //El modelo siempre es el mismo que D es decir 0 en este caso
+   *(D+0)= distance (ColumnModel, pModel);
 
-  ndummy=iwindow_1(&iWindow,conf_NModels);
+   ndummy=iwindow_1(&iWindow,conf_NModels);
 
-  for (i=0;i<Ncoefficients;i++){
-	  *(ColumnModel+i)= *(*(ModelParts2+i)+ndummy);
-  }
+   for (i=0;i<Ncoefficients;i++){
+	   *(ColumnModel+i)= *(*(ModelParts2+i)+ndummy);
+   }
 
 
   //for (i=0;i<11;i++){
