@@ -7,6 +7,7 @@ Implementation of Apodis 2
 
 JET signal reading method provide by Jesus Vega (CIEMAT)
 
+Se ha generado un branch para estabilizar antes de hacer los modelos de 8 y 12
 
 */
 
