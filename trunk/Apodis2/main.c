@@ -425,28 +425,78 @@ main (int argc, char *argv[]){
 
   } //end for
 
-  //Model 8. Signal 8 is inductance derivate. Inductance signal 2
-	strcpy((pSignal+7)->name,"Der. Inductance");
-	if( ((pSignal+7)->pData = (double *) malloc((pSignal+2)->nSamples*sizeof(double))) == (double *) 0 ){ //Allocate memory
+  //Model 12. Signal 7 is Poloidal beta; Signal 8 Vertical position. Signal 9 derivate of 2 (inductance) Signal 10 derivate 7 (poloidal beta) Signal 11 derivate 8 (Vertical Position)
+
+
+	strcpy((pSignal+9)->name,"Der. Inductance"); //Signal 9 Der. Inductance
+	if( ((pSignal+9)->pData = (double *) malloc((pSignal+2)->nSamples*sizeof(double))) == (double *) 0 ){ //Allocate memory
 		free(pSignal);
-		printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+7)->name, shotNumber);
+		printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+9)->name, shotNumber);
 		exit(0);
 	}
-	if(((pSignal+7)->pTime = (double *) malloc((pSignal+2)->nSamples*sizeof(double))) == (double *) 0){ //Allocate memory
-		free((pSignal+7)->pData);
+	if(((pSignal+9)->pTime = (double *) malloc((pSignal+2)->nSamples*sizeof(double))) == (double *) 0){ //Allocate memory
+		free((pSignal+9)->pData);
 		free(pSignal);
-		printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+7)->name, shotNumber);
+		printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+9)->name, shotNumber);
 		exit(0);
 	}
-	(pSignal+7)->nSamples= (pSignal+2)->nSamples;
-	(pSignal+7)->Npoints= conf_Npoints;
+	(pSignal+9)->nSamples= (pSignal+2)->nSamples;
+	(pSignal+9)->Npoints= conf_Npoints;
 
  for (j=0;j<(pSignal+2)->nSamples-1;j++){
 //		 dummy= (double) (*((pSignal+4)->pData+j+1) - *((pSignal+4)->pData+j) );
-		*((pSignal+7)->pData+j)= (double) (*((pSignal+2)->pData+j+1) - *((pSignal+2)->pData+j) );
-		*((pSignal+7)->pTime+j)= (double) (*((pSignal+2)->pTime+j+1) - *((pSignal+2)->pTime+j) );
+		*((pSignal+9)->pData+j)= (double) (*((pSignal+2)->pData+j+1) - *((pSignal+2)->pData+j) );
+		*((pSignal+9)->pTime+j)= (double) (*((pSignal+2)->pTime+j+1) - *((pSignal+2)->pTime+j) );
   }
-printf("Signal 8 is derivate  \n");
+  printf("Signal 10 is derivate  \n");
+
+
+	strcpy((pSignal+10)->name,"Der. Beta"); //Signal 10 Der. Poloidal beta
+	if( ((pSignal+10)->pData = (double *) malloc((pSignal+7)->nSamples*sizeof(double))) == (double *) 0 ){ //Allocate memory
+		free(pSignal);
+		printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+10)->name, shotNumber);
+		exit(0);
+	}
+	if(((pSignal+10)->pTime = (double *) malloc((pSignal+7)->nSamples*sizeof(double))) == (double *) 0){ //Allocate memory
+		free((pSignal+10)->pData);
+		free(pSignal);
+		printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+10)->name, shotNumber);
+		exit(0);
+	}
+	(pSignal+10)->nSamples= (pSignal+7)->nSamples;
+	(pSignal+10)->Npoints= conf_Npoints;
+
+for (j=0;j<(pSignal+7)->nSamples-1;j++){
+//		 dummy= (double) (*((pSignal+4)->pData+j+1) - *((pSignal+4)->pData+j) );
+		*((pSignal+10)->pData+j)= (double) (*((pSignal+7)->pData+j+1) - *((pSignal+7)->pData+j) );
+		*((pSignal+10)->pTime+j)= (double) (*((pSignal+7)->pTime+j+1) - *((pSignal+7)->pTime+j) );
+}
+printf("Signal 11 is derivate  \n");
+
+strcpy((pSignal+11)->name,"Der. Vertical Pos."); //Signal 11 Der. Vertical Pos
+if( ((pSignal+11)->pData = (double *) malloc((pSignal+8)->nSamples*sizeof(double))) == (double *) 0 ){ //Allocate memory
+	free(pSignal);
+	printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+11)->name, shotNumber);
+	exit(0);
+}
+if(((pSignal+11)->pTime = (double *) malloc((pSignal+8)->nSamples*sizeof(double))) == (double *) 0){ //Allocate memory
+	free((pSignal+11)->pData);
+	free(pSignal);
+	printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+11)->name, shotNumber);
+	exit(0);
+}
+(pSignal+11)->nSamples= (pSignal+8)->nSamples;
+(pSignal+11)->Npoints= conf_Npoints;
+
+for (j=0;j<(pSignal+8)->nSamples-1;j++){
+//		 dummy= (double) (*((pSignal+4)->pData+j+1) - *((pSignal+4)->pData+j) );
+	*((pSignal+11)->pData+j)= (double) (*((pSignal+8)->pData+j+1) - *((pSignal+8)->pData+j) );
+	*((pSignal+11)->pTime+j)= (double) (*((pSignal+8)->pTime+j+1) - *((pSignal+8)->pTime+j) );
+}
+printf("Signal 12 is derivate  \n");
+
+
+
 
 
   double *pData;        //Pointer to raw data
