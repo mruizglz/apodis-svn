@@ -438,7 +438,8 @@ main (int argc, char *argv[]){
 		printf("\n**** Not available memory for signal %s, shot %d\n\n",(pSignal+7)->name, shotNumber);
 		exit(0);
 	}
-
+	(pSignal+7)->nSamples= (pSignal+2)->nSamples;
+	(pSignal+7)->Npoints= conf_Npoints;
 
  for (j=0;j<(pSignal+2)->nSamples-1;j++){
 //		 dummy= (double) (*((pSignal+4)->pData+j+1) - *((pSignal+4)->pData+j) );
@@ -575,13 +576,13 @@ printf("Signal 8 is derivate  \n");
 
 	  for(z=0;z < conf_Npoints;z++){
 
-		  for (i=0;i<conf_Nsignals;i++){ //Resampling for raw signals only
+		  for (i=0;i<Nsignals;i++){ //Resampling for raw signals only  =====>  se pasa de conf_Nsignals a Nsignals
 			     t=resampling2 ( *(t0+i), conf_Sampling, z, tini,*((pSignal+i)->pM+j) ,(pSignal+i));
 		  }
 		  tini += conf_Sampling;
 
 	  }
-	  for (i=0;i<conf_Nsignals;i++){ //Resampling for raw signals only
+	  for (i=0;i<Nsignals;i++){ //Resampling for raw signals only  =====>  se pasa de conf_Nsignals a Nsignals
 
 
 		  #ifdef DEBUGLEVEL1
@@ -812,7 +813,7 @@ printf("Signal 8 is derivate  \n");
 
 	  for(z=0;z < conf_Npoints;z++){
 
-		  for (i=0;i<conf_Nsignals;i++){ //Resampling for raw signals only
+		  for (i=0;i<Nsignals;i++){ //Resampling for raw signals only =====>  se pasa de conf_Nsignals a Nsignals
 
 			   t=resampling2 ( *(t0+i), conf_Sampling, z, tini,*((pSignal+i)->pM+j) ,(pSignal+i));
 		  }
@@ -820,7 +821,7 @@ printf("Signal 8 is derivate  \n");
 
 	  }
 
-	  for (i=0;i<conf_Nsignals;i++){ //Resampling for raw signals only
+	  for (i=0;i<Nsignals;i++){ //Resampling for raw signals only =====>  se pasa de conf_Nsignals a Nsignals
 		  txt[0]= NULL;
 
 		  #ifdef DEBUGLEVEL1
